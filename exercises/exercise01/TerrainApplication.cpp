@@ -1,8 +1,11 @@
 #include "TerrainApplication.h"
 #include "ituGL/geometry/VertexAttribute.h"
 
+
 // (todo) 01.1: Include the libraries you need
 #include <vector>
+#define STB_PERLIN_IMPLEMENTATION 
+#include "stb_perlin.h"
 
 #include <cmath>
 #include <iostream>
@@ -37,24 +40,40 @@ TerrainApplication::TerrainApplication()
 {
 }
 
+Vector3 GetColor(float z) {
+    if (z < -0.025) {
+        return Vector3(0, 0, 1);
+    }
+    else if (z < 0.05) {
+        return Vector3(0, 1, 0);
+    }
+    else {
+        return Vector3(1, 1, 1);
+    }
+}
+
 void TerrainApplication::Initialize()
 {
     Application::Initialize();
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+    glEnable(GL_DEPTH_TEST);
     // Build shaders and store in m_shaderProgram
     BuildShaders();
 
     // (todo) 01.1: Create containers for the vertex position
     std::vector<Vector3> positions;
     std::vector<Vector2> textureCoordinates;
-    std::vector<unsigned int> indices;
+    std::vector<unsigned int> indices; 
+    std::vector<Vector3> colors;
 
 
     // (todo) 01.1: Fill in vertex data
-    int terrainSize = 5;
-
+    float lacunarity = 5;
+    float gain = 1;
+    int octaves = 2;
+    float zInfluence = .15;
 
     float spaceBetweenVerticesH = 1.0 / float(m_gridX);
     float spaceBetweenVerticesV = 1.0 / float(m_gridY);
@@ -62,15 +81,27 @@ void TerrainApplication::Initialize()
     for (int row = 0; row < m_gridY; ++row) {
         for (int column = 0; column < m_gridX; ++column) {
 
-            Vector3 pos1(float(column) * spaceBetweenVerticesH - 0.5, float(row) * spaceBetweenVerticesV - 0.5, 0);
-            Vector3 pos2(float(column + 1) * spaceBetweenVerticesH - 0.5, float(row) * spaceBetweenVerticesV - 0.5, 0);
-            Vector3 pos3(float(column + 1) * spaceBetweenVerticesH - 0.5, float(row + 1) * spaceBetweenVerticesV - 0.5, 0);
-            Vector3 pos4(float(column) * spaceBetweenVerticesH - 0.5, float(row + 1) * spaceBetweenVerticesV - 0.5, 0);
+            float xLeft = float(column) * spaceBetweenVerticesH - 0.5;
+            float xRight = float(column + 1) * spaceBetweenVerticesH - 0.5;
+
+            float yUp = float(row) * spaceBetweenVerticesV - 0.5;
+            float yDown = float(row + 1) * spaceBetweenVerticesV - 0.5;
+
+            float z01 = stb_perlin_fbm_noise3(xLeft, yUp, 0, lacunarity, gain, octaves) * zInfluence;
+            float z02 = stb_perlin_fbm_noise3(xRight, yUp, 0, lacunarity, gain, octaves) * zInfluence;
+            float z03 = stb_perlin_fbm_noise3(xRight, yDown, 0, lacunarity, gain, octaves) * zInfluence;
+            float z04 = stb_perlin_fbm_noise3(xLeft, yDown, 0, lacunarity, gain, octaves) * zInfluence;
+
+
+            Vector3 pos1(xLeft, yUp, z01);
+            Vector3 pos2(xRight, yUp, z02);
+            Vector3 pos3(xRight, yDown, z03);
+            Vector3 pos4(xLeft, yDown, z04);
+
             positions.push_back(pos1);
             positions.push_back(pos2);
             positions.push_back(pos3);
             positions.push_back(pos4);
-
 
             indices.push_back(row * m_gridY * 4 + column * 4);
             indices.push_back(row * m_gridY * 4 + column * 4 + 1);
@@ -91,23 +122,32 @@ void TerrainApplication::Initialize()
             textureCoordinates.push_back(textureCoordinate02);
             textureCoordinates.push_back(textureCoordinate03);
             textureCoordinates.push_back(textureCoordinate04);
+
+            //add colors
+            colors.push_back(GetColor(z01));
+            colors.push_back(GetColor(z02));
+            colors.push_back(GetColor(z03));
+            colors.push_back(GetColor(z04));
         }
     }
 
     // (todo) 01.1: Initialize VAO, and VBO
     m_VAO.Bind();
 
-
-    int vertexCount = m_gridX * m_gridY * 6;
+    int vertexCount = m_gridX * m_gridY * 4;
     m_VBO.Bind();
-    m_VBO.AllocateData(vertexCount * sizeof(Vector2) + vertexCount * sizeof(Vector3));
+    m_VBO.AllocateData(vertexCount * sizeof(Vector3) + vertexCount * sizeof(Vector2) + vertexCount * sizeof(Vector3));
     m_VBO.UpdateData(std::span(positions));
     m_VBO.UpdateData(std::span(textureCoordinates), vertexCount * sizeof(Vector3));
+    m_VBO.UpdateData(std::span(colors), vertexCount * sizeof(Vector3) + vertexCount * sizeof(Vector2));
 
     VertexAttribute position(Data::Type::Float, 3);
     VertexAttribute textureCoordinate(Data::Type::Float, 2);
+    VertexAttribute color(Data::Type::Float, 3);
+
     m_VAO.SetAttribute(0, position, 0);
     m_VAO.SetAttribute(1, textureCoordinate, vertexCount * sizeof(Vector3));
+    m_VAO.SetAttribute(2, color, vertexCount * sizeof(Vector3) + vertexCount * sizeof(Vector2));
 
     // (todo) 01.5: Initialize EBO
     m_EBO.Bind();

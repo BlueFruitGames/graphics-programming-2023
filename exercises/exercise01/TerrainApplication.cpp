@@ -32,7 +32,11 @@ struct Vector3
 };
 
 // (todo) 01.8: Declare an struct with the vertex format
-
+struct Vertex {
+    Vector3 position;
+    Vector2 textureCoordinate;
+    Vector3 color;
+};
 
 
 TerrainApplication::TerrainApplication()
@@ -63,10 +67,8 @@ void TerrainApplication::Initialize()
     BuildShaders();
 
     // (todo) 01.1: Create containers for the vertex position
-    std::vector<Vector3> positions;
-    std::vector<Vector2> textureCoordinates;
+    std::vector<Vertex> vertexAttributes;
     std::vector<unsigned int> indices; 
-    std::vector<Vector3> colors;
 
 
     // (todo) 01.1: Fill in vertex data
@@ -92,16 +94,30 @@ void TerrainApplication::Initialize()
             float z03 = stb_perlin_fbm_noise3(xRight, yDown, 0, lacunarity, gain, octaves) * zInfluence;
             float z04 = stb_perlin_fbm_noise3(xLeft, yDown, 0, lacunarity, gain, octaves) * zInfluence;
 
+            Vertex vertex01;
+            vertex01.position = Vector3(xLeft, yUp, z01);
+            vertex01.textureCoordinate = Vector2(0, 0);
+            vertex01.color = GetColor(z01);
 
-            Vector3 pos1(xLeft, yUp, z01);
-            Vector3 pos2(xRight, yUp, z02);
-            Vector3 pos3(xRight, yDown, z03);
-            Vector3 pos4(xLeft, yDown, z04);
+            Vertex vertex02;
+            vertex02.position = Vector3(xRight, yUp, z02);
+            vertex02.textureCoordinate = Vector2(1, 0);
+            vertex02.color = GetColor(z02);
 
-            positions.push_back(pos1);
-            positions.push_back(pos2);
-            positions.push_back(pos3);
-            positions.push_back(pos4);
+            Vertex vertex03;
+            vertex03.position = Vector3(xRight, yDown, z03);
+            vertex03.textureCoordinate = Vector2(1, 1);
+            vertex03.color = GetColor(z03);
+
+            Vertex vertex04;
+            vertex04.position = Vector3(xLeft, yDown, z04);
+            vertex04.textureCoordinate = Vector2(0, 1);
+            vertex04.color = GetColor(z04);
+
+            vertexAttributes.push_back(vertex01);
+            vertexAttributes.push_back(vertex02);
+            vertexAttributes.push_back(vertex03);
+            vertexAttributes.push_back(vertex04);
 
             indices.push_back(row * m_gridY * 4 + column * 4);
             indices.push_back(row * m_gridY * 4 + column * 4 + 1);
@@ -110,24 +126,6 @@ void TerrainApplication::Initialize()
             indices.push_back(row * m_gridY * 4 + column * 4 + 1);
             indices.push_back(row * m_gridY * 4 + column * 4 + 2);
             indices.push_back(row * m_gridY * 4 + column * 4 + 3);
-            
-
-            //add texture coordinates
-            Vector2 textureCoordinate01(0, 0);
-            Vector2 textureCoordinate02(1, 0);
-            Vector2 textureCoordinate03(1, 1);
-            Vector2 textureCoordinate04(0, 1);
-
-            textureCoordinates.push_back(textureCoordinate01);
-            textureCoordinates.push_back(textureCoordinate02);
-            textureCoordinates.push_back(textureCoordinate03);
-            textureCoordinates.push_back(textureCoordinate04);
-
-            //add colors
-            colors.push_back(GetColor(z01));
-            colors.push_back(GetColor(z02));
-            colors.push_back(GetColor(z03));
-            colors.push_back(GetColor(z04));
         }
     }
 
@@ -136,18 +134,15 @@ void TerrainApplication::Initialize()
 
     int vertexCount = m_gridX * m_gridY * 4;
     m_VBO.Bind();
-    m_VBO.AllocateData(vertexCount * sizeof(Vector3) + vertexCount * sizeof(Vector2) + vertexCount * sizeof(Vector3));
-    m_VBO.UpdateData(std::span(positions));
-    m_VBO.UpdateData(std::span(textureCoordinates), vertexCount * sizeof(Vector3));
-    m_VBO.UpdateData(std::span(colors), vertexCount * sizeof(Vector3) + vertexCount * sizeof(Vector2));
+    m_VBO.AllocateData(std::span(vertexAttributes));
 
     VertexAttribute position(Data::Type::Float, 3);
     VertexAttribute textureCoordinate(Data::Type::Float, 2);
     VertexAttribute color(Data::Type::Float, 3);
 
-    m_VAO.SetAttribute(0, position, 0);
-    m_VAO.SetAttribute(1, textureCoordinate, vertexCount * sizeof(Vector3));
-    m_VAO.SetAttribute(2, color, vertexCount * sizeof(Vector3) + vertexCount * sizeof(Vector2));
+    m_VAO.SetAttribute(0, position, 0, sizeof(Vertex));
+    m_VAO.SetAttribute(1, textureCoordinate, sizeof(Vector3), sizeof(Vertex));
+    m_VAO.SetAttribute(2, color, sizeof(Vector3) + sizeof(Vector2), sizeof(Vertex));
 
     // (todo) 01.5: Initialize EBO
     m_EBO.Bind();

@@ -41,13 +41,14 @@ void TerrainApplication::Initialize()
 {
     Application::Initialize();
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // Build shaders and store in m_shaderProgram
     BuildShaders();
 
     // (todo) 01.1: Create containers for the vertex position
-    std::vector<Vector3> vertices;
+    std::vector<Vector3> positions;
+    std::vector<Vector2> textureCoordinates;
     std::vector<unsigned int> indices;
 
 
@@ -70,28 +71,49 @@ void TerrainApplication::Initialize()
             Vector3 pos5(float(column + 1) * spaceBetweenVerticesH - 0.5, float(row + 1) * spaceBetweenVerticesV - 0.5, 0);
             Vector3 pos6(float(column) * spaceBetweenVerticesH - 0.5, float(row + 1) * spaceBetweenVerticesV - 0.5, 0);
 
-            vertices.push_back(pos1);
-            vertices.push_back(pos2);
-            vertices.push_back(pos3);
-            vertices.push_back(pos4);
-            vertices.push_back(pos5);
-            vertices.push_back(pos6);
+            positions.push_back(pos1);
+            positions.push_back(pos2);
+            positions.push_back(pos3);
+            positions.push_back(pos4);
+            positions.push_back(pos5);
+            positions.push_back(pos6);
 
             //add indices positions
             for (int i = 0; i < 6; ++i) {
                 indices.push_back(row * m_gridY * 2 + column * 6 + 1);
             }
+
+            //add texture coordinates
+            Vector2 textureCoordinate01(0, 0);
+            Vector2 textureCoordinate02(1, 0);
+            Vector2 textureCoordinate03(0, 1);
+            Vector2 textureCoordinate04(1, 0);
+            Vector2 textureCoordinate05(1, 1);
+            Vector2 textureCoordinate06(0, 1);
+
+            textureCoordinates.push_back(textureCoordinate01);
+            textureCoordinates.push_back(textureCoordinate02);
+            textureCoordinates.push_back(textureCoordinate03);
+            textureCoordinates.push_back(textureCoordinate04);
+            textureCoordinates.push_back(textureCoordinate05);
+            textureCoordinates.push_back(textureCoordinate06);
         }
     }
 
     // (todo) 01.1: Initialize VAO, and VBO
     m_VAO.Bind();
 
+
+    int vertexCount = m_gridX * m_gridY * 6;
     m_VBO.Bind();
-    m_VBO.AllocateData(std::span(vertices));
+    m_VBO.AllocateData(vertexCount * sizeof(Vector2) + vertexCount * sizeof(Vector3));
+    m_VBO.UpdateData(std::span(positions));
+    m_VBO.UpdateData(std::span(textureCoordinates), vertexCount * sizeof(Vector3));
 
     VertexAttribute position(Data::Type::Float, 3);
+    VertexAttribute textureCoordinate(Data::Type::Float, 2);
     m_VAO.SetAttribute(0, position, 0);
+    m_VAO.SetAttribute(1, textureCoordinate, vertexCount * sizeof(Vector3));
     // (todo) 01.5: Initialize EBO
 
 

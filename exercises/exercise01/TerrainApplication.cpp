@@ -41,6 +41,8 @@ void TerrainApplication::Initialize()
 {
     Application::Initialize();
 
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
     // Build shaders and store in m_shaderProgram
     BuildShaders();
 
@@ -53,20 +55,20 @@ void TerrainApplication::Initialize()
     int terrainSize = 5;
 
 
-    float spaceBetweenVerticesH = 1;
-    float spaceBetweenVerticesV = 1;
+    float spaceBetweenVerticesH = 1.0 / float(m_gridX);
+    float spaceBetweenVerticesV = 1.0 / float(m_gridY);
 
     for (int row = 0; row < m_gridY; ++row) {
         for (int column = 0; column < m_gridX; ++column) {
 
             //add vertex positions
+            Vector3 pos1(float(column) * spaceBetweenVerticesH - 0.5, float(row) * spaceBetweenVerticesV - 0.5, 0);
+            Vector3 pos2(float(column + 1) * spaceBetweenVerticesH - 0.5, float(row) * spaceBetweenVerticesV - 0.5, 0);
+            Vector3 pos3(float(column) * spaceBetweenVerticesH - 0.5, float(row + 1) * spaceBetweenVerticesV - 0.5, 0);
 
-            Vector3 pos1(float(column) * spaceBetweenVerticesH, float(row) * spaceBetweenVerticesV, 0);
-            Vector3 pos2(float(column + 1) * spaceBetweenVerticesH, float(row) * spaceBetweenVerticesV, 0);
-            Vector3 pos3(float(column) * spaceBetweenVerticesH, float(row + 1) * spaceBetweenVerticesV, 0);
-            Vector3 pos4(float(column) + 1 * spaceBetweenVerticesH, float(row) * spaceBetweenVerticesV, 0);
-            Vector3 pos5(float(column + 1) * spaceBetweenVerticesH, float(row + 1) * spaceBetweenVerticesV, 0);
-            Vector3 pos6(float(column) * spaceBetweenVerticesH, float(row + 1) * spaceBetweenVerticesV, 0);
+            Vector3 pos4(float(column + 1) * spaceBetweenVerticesH - 0.5, float(row) * spaceBetweenVerticesV - 0.5, 0);
+            Vector3 pos5(float(column + 1) * spaceBetweenVerticesH - 0.5, float(row + 1) * spaceBetweenVerticesV - 0.5, 0);
+            Vector3 pos6(float(column) * spaceBetweenVerticesH - 0.5, float(row + 1) * spaceBetweenVerticesV - 0.5, 0);
 
             vertices.push_back(pos1);
             vertices.push_back(pos2);
@@ -96,7 +98,6 @@ void TerrainApplication::Initialize()
     // (todo) 01.1: Unbind VAO, and VBO
     m_VAO.Unbind();
     m_VBO.Unbind();
-
 
     // (todo) 01.5: Unbind EBO
 

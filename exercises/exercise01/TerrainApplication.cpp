@@ -62,41 +62,35 @@ void TerrainApplication::Initialize()
     for (int row = 0; row < m_gridY; ++row) {
         for (int column = 0; column < m_gridX; ++column) {
 
-            //add vertex positions
             Vector3 pos1(float(column) * spaceBetweenVerticesH - 0.5, float(row) * spaceBetweenVerticesV - 0.5, 0);
             Vector3 pos2(float(column + 1) * spaceBetweenVerticesH - 0.5, float(row) * spaceBetweenVerticesV - 0.5, 0);
-            Vector3 pos3(float(column) * spaceBetweenVerticesH - 0.5, float(row + 1) * spaceBetweenVerticesV - 0.5, 0);
-
-            Vector3 pos4(float(column + 1) * spaceBetweenVerticesH - 0.5, float(row) * spaceBetweenVerticesV - 0.5, 0);
-            Vector3 pos5(float(column + 1) * spaceBetweenVerticesH - 0.5, float(row + 1) * spaceBetweenVerticesV - 0.5, 0);
-            Vector3 pos6(float(column) * spaceBetweenVerticesH - 0.5, float(row + 1) * spaceBetweenVerticesV - 0.5, 0);
-
+            Vector3 pos3(float(column + 1) * spaceBetweenVerticesH - 0.5, float(row + 1) * spaceBetweenVerticesV - 0.5, 0);
+            Vector3 pos4(float(column) * spaceBetweenVerticesH - 0.5, float(row + 1) * spaceBetweenVerticesV - 0.5, 0);
             positions.push_back(pos1);
             positions.push_back(pos2);
             positions.push_back(pos3);
             positions.push_back(pos4);
-            positions.push_back(pos5);
-            positions.push_back(pos6);
 
-            //add indices positions
-            for (int i = 0; i < 6; ++i) {
-                indices.push_back(row * m_gridY * 2 + column * 6 + 1);
-            }
+
+            indices.push_back(row * m_gridY * 4 + column * 4);
+            indices.push_back(row * m_gridY * 4 + column * 4 + 1);
+            indices.push_back(row * m_gridY * 4 + column * 4 + 3);
+
+            indices.push_back(row * m_gridY * 4 + column * 4 + 1);
+            indices.push_back(row * m_gridY * 4 + column * 4 + 2);
+            indices.push_back(row * m_gridY * 4 + column * 4 + 3);
+            
 
             //add texture coordinates
             Vector2 textureCoordinate01(0, 0);
             Vector2 textureCoordinate02(1, 0);
-            Vector2 textureCoordinate03(0, 1);
-            Vector2 textureCoordinate04(1, 0);
-            Vector2 textureCoordinate05(1, 1);
-            Vector2 textureCoordinate06(0, 1);
+            Vector2 textureCoordinate03(1, 1);
+            Vector2 textureCoordinate04(0, 1);
 
             textureCoordinates.push_back(textureCoordinate01);
             textureCoordinates.push_back(textureCoordinate02);
             textureCoordinates.push_back(textureCoordinate03);
             textureCoordinates.push_back(textureCoordinate04);
-            textureCoordinates.push_back(textureCoordinate05);
-            textureCoordinates.push_back(textureCoordinate06);
         }
     }
 
@@ -114,7 +108,10 @@ void TerrainApplication::Initialize()
     VertexAttribute textureCoordinate(Data::Type::Float, 2);
     m_VAO.SetAttribute(0, position, 0);
     m_VAO.SetAttribute(1, textureCoordinate, vertexCount * sizeof(Vector3));
+
     // (todo) 01.5: Initialize EBO
+    m_EBO.Bind();
+    m_EBO.AllocateData<unsigned int>(std::span(indices));
 
 
     // (todo) 01.1: Unbind VAO, and VBO
@@ -122,6 +119,7 @@ void TerrainApplication::Initialize()
     m_VBO.Unbind();
 
     // (todo) 01.5: Unbind EBO
+    m_EBO.Unbind();
 
 }
 
@@ -145,7 +143,8 @@ void TerrainApplication::Render()
     glUseProgram(m_shaderProgram);
 
     // (todo) 01.1: Draw the grid
-    glDrawArrays(GL_TRIANGLES, 0, m_gridX * m_gridY * 6);
+
+    glDrawElements(GL_TRIANGLES, 2 * 3 * m_gridX * m_gridY, GL_UNSIGNED_INT, 0);
 
 }
 

@@ -1,6 +1,8 @@
 #include "TerrainApplication.h"
+#include "ituGL/geometry/VertexAttribute.h"
 
 // (todo) 01.1: Include the libraries you need
+#include <vector>
 
 #include <cmath>
 #include <iostream>
@@ -43,18 +45,57 @@ void TerrainApplication::Initialize()
     BuildShaders();
 
     // (todo) 01.1: Create containers for the vertex position
+    std::vector<Vector3> vertices;
+    std::vector<unsigned int> indices;
 
 
     // (todo) 01.1: Fill in vertex data
+    int terrainSize = 5;
 
+
+    float spaceBetweenVerticesH = 1;
+    float spaceBetweenVerticesV = 1;
+
+    for (int row = 0; row < m_gridY; ++row) {
+        for (int column = 0; column < m_gridX; ++column) {
+
+            //add vertex positions
+
+            Vector3 pos1(float(column) * spaceBetweenVerticesH, float(row) * spaceBetweenVerticesV, 0);
+            Vector3 pos2(float(column + 1) * spaceBetweenVerticesH, float(row) * spaceBetweenVerticesV, 0);
+            Vector3 pos3(float(column) * spaceBetweenVerticesH, float(row + 1) * spaceBetweenVerticesV, 0);
+            Vector3 pos4(float(column) + 1 * spaceBetweenVerticesH, float(row) * spaceBetweenVerticesV, 0);
+            Vector3 pos5(float(column + 1) * spaceBetweenVerticesH, float(row + 1) * spaceBetweenVerticesV, 0);
+            Vector3 pos6(float(column) * spaceBetweenVerticesH, float(row + 1) * spaceBetweenVerticesV, 0);
+
+            vertices.push_back(pos1);
+            vertices.push_back(pos2);
+            vertices.push_back(pos3);
+            vertices.push_back(pos4);
+            vertices.push_back(pos5);
+            vertices.push_back(pos6);
+
+            //add indices positions
+            for (int i = 0; i < 6; ++i) {
+                indices.push_back(row * m_gridY * 2 + column * 6 + 1);
+            }
+        }
+    }
 
     // (todo) 01.1: Initialize VAO, and VBO
+    m_VAO.Bind();
 
+    m_VBO.Bind();
+    m_VBO.AllocateData(std::span(vertices));
 
+    VertexAttribute position(Data::Type::Float, 3);
+    m_VAO.SetAttribute(0, position, 0);
     // (todo) 01.5: Initialize EBO
 
 
     // (todo) 01.1: Unbind VAO, and VBO
+    m_VAO.Unbind();
+    m_VBO.Unbind();
 
 
     // (todo) 01.5: Unbind EBO
@@ -75,10 +116,13 @@ void TerrainApplication::Render()
     // Clear color and depth
     GetDevice().Clear(true, Color(0.0f, 0.0f, 0.0f, 1.0f), true, 1.0f);
 
+    m_VAO.Bind();
+
     // Set shader to be used
     glUseProgram(m_shaderProgram);
 
     // (todo) 01.1: Draw the grid
+    glDrawArrays(GL_TRIANGLES, 0, m_gridX * m_gridY * 6);
 
 }
 

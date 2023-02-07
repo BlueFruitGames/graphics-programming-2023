@@ -36,4 +36,5 @@ private:
     // (todo) 01.5: Declare an EBO
     ElementBufferObject m_EBO;
 
+
 };

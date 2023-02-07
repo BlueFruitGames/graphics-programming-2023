@@ -36,6 +36,7 @@ struct Vertex {
     Vector3 position;
     Vector2 textureCoordinate;
     Vector3 color;
+    Vector3 normal;
 };
 
 
@@ -55,6 +56,7 @@ Vector3 GetColor(float z) {
         return Vector3(1, 1, 1);
     }
 }
+
 
 void TerrainApplication::Initialize()
 {
@@ -98,34 +100,116 @@ void TerrainApplication::Initialize()
             vertex01.position = Vector3(xLeft, yUp, z01);
             vertex01.textureCoordinate = Vector2(0, 0);
             vertex01.color = GetColor(z01);
+            vertex01.normal = Vector3(1,1,1);
+
 
             Vertex vertex02;
             vertex02.position = Vector3(xRight, yUp, z02);
             vertex02.textureCoordinate = Vector2(1, 0);
             vertex02.color = GetColor(z02);
+            vertex02.normal = Vector3(1, 1, 1);
 
             Vertex vertex03;
             vertex03.position = Vector3(xRight, yDown, z03);
             vertex03.textureCoordinate = Vector2(1, 1);
             vertex03.color = GetColor(z03);
+            vertex03.normal = Vector3(1, 1, 1);
 
             Vertex vertex04;
             vertex04.position = Vector3(xLeft, yDown, z04);
             vertex04.textureCoordinate = Vector2(0, 1);
             vertex04.color = GetColor(z04);
+            vertex04.normal = Vector3(1, 1, 1);
 
             vertexAttributes.push_back(vertex01);
             vertexAttributes.push_back(vertex02);
             vertexAttributes.push_back(vertex03);
             vertexAttributes.push_back(vertex04);
 
-            indices.push_back(row * m_gridY * 4 + column * 4);
-            indices.push_back(row * m_gridY * 4 + column * 4 + 1);
-            indices.push_back(row * m_gridY * 4 + column * 4 + 3);
+            indices.push_back(row * m_gridX * 4 + column * 4);
+            indices.push_back(row * m_gridX * 4 + column * 4 + 1);
+            indices.push_back(row * m_gridX * 4 + column * 4 + 3);
 
-            indices.push_back(row * m_gridY * 4 + column * 4 + 1);
-            indices.push_back(row * m_gridY * 4 + column * 4 + 2);
-            indices.push_back(row * m_gridY * 4 + column * 4 + 3);
+            indices.push_back(row * m_gridX * 4 + column * 4 + 1);
+            indices.push_back(row * m_gridX * 4 + column * 4 + 2);
+            indices.push_back(row * m_gridX * 4 + column * 4 + 3);
+        }
+    }
+
+
+    for (int row = 0; row < m_gridY; ++row) {
+        for (int column = 0; column < m_gridX; ++column) {
+            for (int i = 0; i < 4; ++i) {
+                Vector3 left;
+                Vector3 right;
+                Vector3 up;
+                Vector3 down;
+
+                int currentRow;
+                int currentColumn;
+
+                if (i == 0) {
+                    currentRow = row;
+                    currentColumn = column;
+                }
+                else if (i == 1) {
+                    currentRow = row;
+                    currentColumn = column + 1;
+                }
+                else if (i == 2) {
+                    currentRow = row + 1;
+                    currentColumn = column + 1;
+                }
+                else {
+                    currentRow = row + 1;
+                    currentColumn = column;
+                }
+
+                float x = vertexAttributes[row * m_gridX * 4 + column * 4 + i].position.x;
+                float y = vertexAttributes[row * m_gridX * 4 + column * 4 + i].position.y;
+
+                if (currentColumn - 1 < 0) {
+                    left.x = x;
+                    left.z = stb_perlin_fbm_noise3(x, y, 0, lacunarity, gain, octaves) * zInfluence;
+              
+                }
+                else {
+                    left.x = x - spaceBetweenVerticesH;
+                    left.z = stb_perlin_fbm_noise3(x - spaceBetweenVerticesH, y, 0, lacunarity, gain, octaves) * zInfluence;
+                }
+
+                if (currentColumn + 1 >= m_gridX) {
+                    right.x = x;
+                    right.z = stb_perlin_fbm_noise3(x, y, 0, lacunarity, gain, octaves) * zInfluence;
+                }
+                else {
+                    right.x = x + spaceBetweenVerticesH;
+                    right.z = stb_perlin_fbm_noise3(x + spaceBetweenVerticesH, y, 0, lacunarity, gain, octaves) * zInfluence;
+                }
+
+                if (currentRow - 1 < 0) {
+                    up.y = y;
+                    up.z = stb_perlin_fbm_noise3(x, y, 0, lacunarity, gain, octaves) * zInfluence;
+                }
+                else {
+                    up.y = y - spaceBetweenVerticesV;
+                    up.z = stb_perlin_fbm_noise3(x, y - spaceBetweenVerticesV, 0, lacunarity, gain, octaves) * zInfluence;
+                }
+
+                if (currentRow + 1 >= m_gridY) {
+                    down.y = y;
+                    down.z = stb_perlin_fbm_noise3(x, y, 0, lacunarity, gain, octaves) * zInfluence;
+                }
+                else {
+                    down.y = y + spaceBetweenVerticesV;
+                    down.z = stb_perlin_fbm_noise3(x, y + spaceBetweenVerticesV, 0, lacunarity, gain, octaves) * zInfluence;
+                }
+
+                float deltaX = float(right.z - left.z) / (right.x - left.x);
+                float deltaY = float(up.z - down.z) / (up.y - down.y);
+                Vector3 normal(deltaX, deltaY, 1);
+                vertexAttributes[row * m_gridX * 4 + column * 4 + i].normal = normal.Normalize();
+            }
         }
     }
 
@@ -139,10 +223,12 @@ void TerrainApplication::Initialize()
     VertexAttribute position(Data::Type::Float, 3);
     VertexAttribute textureCoordinate(Data::Type::Float, 2);
     VertexAttribute color(Data::Type::Float, 3);
+    VertexAttribute normal(Data::Type::Float, 3);
 
     m_VAO.SetAttribute(0, position, 0, sizeof(Vertex));
     m_VAO.SetAttribute(1, textureCoordinate, sizeof(Vector3), sizeof(Vertex));
     m_VAO.SetAttribute(2, color, sizeof(Vector3) + sizeof(Vector2), sizeof(Vertex));
+    m_VAO.SetAttribute(3, normal, sizeof(Vector3) + sizeof(Vector2) + sizeof(Vector3), sizeof(Vertex));
 
     // (todo) 01.5: Initialize EBO
     m_EBO.Bind();

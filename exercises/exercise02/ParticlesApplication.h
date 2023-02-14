@@ -4,6 +4,7 @@
 #include <ituGL/geometry/VertexBufferObject.h>
 #include <ituGL/geometry/VertexArrayObject.h>
 #include <ituGL/shader/ShaderProgram.h>
+#include <time.h> 
 
 class ParticlesApplication : public Application
 {
@@ -26,7 +27,7 @@ private:
     void LoadAndCompileShader(Shader& shader, const char* path);
 
     // Emit a new particle
-    void EmitParticle(const glm::vec2& position, const float& size);
+    void EmitParticle(const glm::vec2& position, const float& size, const float& duration);
 
     // Helper methods for random values
     static float Random01();
@@ -52,4 +53,7 @@ private:
 
     // Max number of particles that can exist at the same time
     const unsigned int m_particleCapacity;
+
+    ShaderProgram::Location m_currentTimeLocation;
+    clock_t m_t;
 };

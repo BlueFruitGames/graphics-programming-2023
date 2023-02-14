@@ -14,15 +14,18 @@ struct Particle
     glm::vec2 position;
     // (todo) 02.X: Add more vertex attributes
     float size;
- 
+    float birth;
+    float duration;
 };
 
 // List of attributes of the particle. Must match the structure above
-const std::array<VertexAttribute, 2> s_vertexAttributes =
+const std::array<VertexAttribute, 4> s_vertexAttributes =
 {
     VertexAttribute(Data::Type::Float, 2), // position
     // (todo) 02.X: Add more vertex attributes
     VertexAttribute(Data::Type::Float, 1), // size
+    VertexAttribute(Data::Type::Float, 1), // birth
+    VertexAttribute(Data::Type::Float, 1), // duration
 
 };
 
@@ -30,12 +33,13 @@ const std::array<VertexAttribute, 2> s_vertexAttributes =
 ParticlesApplication::ParticlesApplication()
     : Application(1024, 1024, "Particles demo")
     , m_particleCount(0)
-    , m_particleCapacity(2048)  // You can change the capacity here to have more particles
+    , m_particleCapacity(2048)// You can change the capacity here to have more particles
 {
 }
 
 void ParticlesApplication::Initialize()
 {
+    m_t = clock();
     InitializeGeometry();
 
     InitializeShaders();
@@ -68,8 +72,9 @@ void ParticlesApplication::Update()
     {
         // (todo) 02.X: Compute new particle attributes here
         float size = RandomRange(5, 15);
+        float duration = RandomRange(1, 2);
 
-        EmitParticle(mousePosition, size);
+        EmitParticle(mousePosition, size, duration);
     }
 
     // save the mouse position (to compare next frame and obtain velocity)
@@ -85,7 +90,8 @@ void ParticlesApplication::Render()
     m_shaderProgram.Use();
 
     // (todo) 02.4: Set CurrentTime uniform
-
+    float curTime = (((float)(clock() - m_t)) / CLOCKS_PER_SEC);
+    m_shaderProgram.SetUniform(m_currentTimeLocation, curTime);
 
     // (todo) 02.6: Set Gravity uniform
 
@@ -145,15 +151,19 @@ void ParticlesApplication::InitializeShaders()
     {
         std::cout << "Error linking shaders" << std::endl;
     }
+
+    m_currentTimeLocation = m_shaderProgram.GetUniformLocation("CurrentTime");
 }
 
-void ParticlesApplication::EmitParticle(const glm::vec2& position, const float& size)
+void ParticlesApplication::EmitParticle(const glm::vec2& position, const float& size, const float& duration)
 {
     // Initialize the particle
     Particle particle;
     particle.position = position;
     // (todo) 02.X: Set the value for other attributes of the particle
     particle.size = size;
+    particle.birth = ((float)(clock() - m_t)) / CLOCKS_PER_SEC; //Set Current Time
+    particle.duration = duration;
 
     // Get the index in the circular buffer
     unsigned int particleIndex = m_particleCount % m_particleCapacity;

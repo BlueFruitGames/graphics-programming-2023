@@ -131,6 +131,7 @@ void ParticlesApplication::InitializeShaders()
     Shader vertexShader(Shader::VertexShader);
     LoadAndCompileShader(vertexShader, "shaders/particles.vert");
 
+
     // Load and compile fragment shader
     Shader fragmentShader(Shader::FragmentShader);
     LoadAndCompileShader(fragmentShader, "shaders/particles.frag");

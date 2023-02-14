@@ -44,6 +44,7 @@ void Shader::SetSource(std::span<const char*> source)
     const char** sources = source.data();
 
     // (todo) 02.1: Set the shader source code
+    glShaderSource(GetHandle(), count, sources, NULL);
 
 }
 
@@ -55,7 +56,7 @@ bool Shader::Compile()
     Handle handle = GetHandle();
 
     // (todo) 02.1: Compile the shader
-
+    glCompileShader(handle);
 
     return IsCompiled();
 }

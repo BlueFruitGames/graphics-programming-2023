@@ -76,6 +76,10 @@ void GearsApplication::Render()
 
     // (todo) 03.4: Draw small gear linked to the center gear
 
+    glm::mat4 translationMatrixSmall_02 = glm::translate(glm::vec3(0, 0.2, 0));
+    glm::mat4 rotationMatrixMedium_02 = glm::rotate(-rotationSpeed *16/32 * GetCurrentTime(), glm::vec3(0, 0, 1));
+    glm::mat4 transformationMatrixSmall_02 = transformationMatrix * translationMatrixSmall_02 * rotationMatrixMedium_02;
+    DrawGear(m_smallGear, transformationMatrixSmall_02, Color(0.0f, 1.0f, 1.0f));
 
     Application::Render();
 }

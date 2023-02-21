@@ -1,12 +1,11 @@
 #include "TerrainApplication.h"
-#include "ituGL/geometry/VertexAttribute.h"
 
+#include <ituGL/geometry/VertexAttribute.h>
 
-// (todo) 01.1: Include the libraries you need
+#define STB_PERLIN_IMPLEMENTATION
+#include <stb_perlin.h>
+
 #include <vector>
-#define STB_PERLIN_IMPLEMENTATION 
-#include "stb_perlin.h"
-
 #include <cmath>
 #include <iostream>
 
@@ -31,217 +30,152 @@ struct Vector3
     }
 };
 
-// (todo) 01.8: Declare an struct with the vertex format
-struct Vertex {
+// Helper struct with the vertex format
+struct Vertex
+{
     Vector3 position;
-    Vector2 textureCoordinate;
+    Vector2 texCoord;
     Vector3 color;
     Vector3 normal;
 };
 
 
+// Forward declare helper function
+Vector3 GetColorFromHeight(float height);
+
+
 TerrainApplication::TerrainApplication()
-    : Application(1024, 1024, "Terrain demo"), m_gridX(16), m_gridY(16), m_shaderProgram(0)
+    : Application(1024, 1024, "Terrain demo"), m_gridX(256), m_gridY(256), m_shaderProgram(0)
 {
 }
-
-Vector3 GetColor(float z) {
-    if (z < -0.025) {
-        return Vector3(0, 0, 1);
-    }
-    else if (z < 0.05) {
-        return Vector3(0, 1, 0);
-    }
-    else {
-        return Vector3(1, 1, 1);
-    }
-}
-
 
 void TerrainApplication::Initialize()
 {
     Application::Initialize();
 
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-    glEnable(GL_DEPTH_TEST);
     // Build shaders and store in m_shaderProgram
     BuildShaders();
 
-    // (todo) 01.1: Create containers for the vertex position
-    std::vector<Vertex> vertexAttributes;
-    std::vector<unsigned int> indices; 
+    // Create containers for the vertex data
+    std::vector<Vertex> vertices;
 
+    // Create container for the element data
+    std::vector<unsigned int> indices;
 
-    // (todo) 01.1: Fill in vertex data
-    float lacunarity = 5;
-    float gain = 1;
-    int octaves = 2;
-    float zInfluence = .15;
+    // Grid scale to convert the entire grid to size 1x1
+    Vector2 scale(1.0f / m_gridX, 1.0f / m_gridY);
 
-    float spaceBetweenVerticesH = 1.0 / float(m_gridX);
-    float spaceBetweenVerticesV = 1.0 / float(m_gridY);
+    // Number of columns and rows
+    unsigned int columnCount = m_gridX + 1;
+    unsigned int rowCount = m_gridY + 1;
 
-    for (int row = 0; row < m_gridY; ++row) {
-        for (int column = 0; column < m_gridX; ++column) {
+    // Iterate over each VERTEX
+    for (unsigned int j = 0; j < rowCount; ++j)
+    {
+        for (unsigned int i = 0; i < columnCount; ++i)
+        {
+            // Vertex data for this vertex only
+            Vertex& vertex = vertices.emplace_back();
+            float x = i * scale.x - 0.5f;
+            float y = j * scale.y - 0.5f;
+            float z = stb_perlin_fbm_noise3(x * 2, y * 2, 0.0f, 1.9f, 0.5f, 8) * 0.5f;
+            vertex.position = Vector3(x, y, z);
+            vertex.texCoord = Vector2(static_cast<float>(i), static_cast<float>(j));
+            vertex.color = GetColorFromHeight(z);
+            vertex.normal = Vector3(0.0f, 0.0f, 1.0f); // Actual value computed after all vertices are created
 
-            float xLeft = float(column) * spaceBetweenVerticesH - 0.5;
-            float xRight = float(column + 1) * spaceBetweenVerticesH - 0.5;
+            // Index data for quad formed by previous vertices and current
+            if (i > 0 && j > 0)
+            {
+                unsigned int top_right = j * columnCount + i; // Current vertex
+                unsigned int top_left = top_right - 1;
+                unsigned int bottom_right = top_right - columnCount;
+                unsigned int bottom_left = bottom_right - 1;
 
-            float yUp = float(row) * spaceBetweenVerticesV - 0.5;
-            float yDown = float(row + 1) * spaceBetweenVerticesV - 0.5;
+                //Triangle 1
+                indices.push_back(bottom_left);
+                indices.push_back(bottom_right);
+                indices.push_back(top_left);
 
-            float z01 = stb_perlin_fbm_noise3(xLeft, yUp, 0, lacunarity, gain, octaves) * zInfluence;
-            float z02 = stb_perlin_fbm_noise3(xRight, yUp, 0, lacunarity, gain, octaves) * zInfluence;
-            float z03 = stb_perlin_fbm_noise3(xRight, yDown, 0, lacunarity, gain, octaves) * zInfluence;
-            float z04 = stb_perlin_fbm_noise3(xLeft, yDown, 0, lacunarity, gain, octaves) * zInfluence;
-
-            Vertex vertex01;
-            vertex01.position = Vector3(xLeft, yUp, z01);
-            vertex01.textureCoordinate = Vector2(0, 0);
-            vertex01.color = GetColor(z01);
-            vertex01.normal = Vector3(1,1,1);
-
-
-            Vertex vertex02;
-            vertex02.position = Vector3(xRight, yUp, z02);
-            vertex02.textureCoordinate = Vector2(1, 0);
-            vertex02.color = GetColor(z02);
-            vertex02.normal = Vector3(1, 1, 1);
-
-            Vertex vertex03;
-            vertex03.position = Vector3(xRight, yDown, z03);
-            vertex03.textureCoordinate = Vector2(1, 1);
-            vertex03.color = GetColor(z03);
-            vertex03.normal = Vector3(1, 1, 1);
-
-            Vertex vertex04;
-            vertex04.position = Vector3(xLeft, yDown, z04);
-            vertex04.textureCoordinate = Vector2(0, 1);
-            vertex04.color = GetColor(z04);
-            vertex04.normal = Vector3(1, 1, 1);
-
-            vertexAttributes.push_back(vertex01);
-            vertexAttributes.push_back(vertex02);
-            vertexAttributes.push_back(vertex03);
-            vertexAttributes.push_back(vertex04);
-
-            indices.push_back(row * m_gridX * 4 + column * 4);
-            indices.push_back(row * m_gridX * 4 + column * 4 + 1);
-            indices.push_back(row * m_gridX * 4 + column * 4 + 3);
-
-            indices.push_back(row * m_gridX * 4 + column * 4 + 1);
-            indices.push_back(row * m_gridX * 4 + column * 4 + 2);
-            indices.push_back(row * m_gridX * 4 + column * 4 + 3);
-        }
-    }
-
-
-    for (int row = 0; row < m_gridY; ++row) {
-        for (int column = 0; column < m_gridX; ++column) {
-            for (int i = 0; i < 4; ++i) {
-                Vector3 left;
-                Vector3 right;
-                Vector3 up;
-                Vector3 down;
-
-                int currentRow;
-                int currentColumn;
-
-                if (i == 0) {
-                    currentRow = row;
-                    currentColumn = column;
-                }
-                else if (i == 1) {
-                    currentRow = row;
-                    currentColumn = column + 1;
-                }
-                else if (i == 2) {
-                    currentRow = row + 1;
-                    currentColumn = column + 1;
-                }
-                else {
-                    currentRow = row + 1;
-                    currentColumn = column;
-                }
-
-                float x = vertexAttributes[row * m_gridX * 4 + column * 4 + i].position.x;
-                float y = vertexAttributes[row * m_gridX * 4 + column * 4 + i].position.y;
-
-                if (currentColumn - 1 < 0) {
-                    left.x = x;
-                    left.z = stb_perlin_fbm_noise3(x, y, 0, lacunarity, gain, octaves) * zInfluence;
-              
-                }
-                else {
-                    left.x = x - spaceBetweenVerticesH;
-                    left.z = stb_perlin_fbm_noise3(x - spaceBetweenVerticesH, y, 0, lacunarity, gain, octaves) * zInfluence;
-                }
-
-                if (currentColumn + 1 >= m_gridX) {
-                    right.x = x;
-                    right.z = stb_perlin_fbm_noise3(x, y, 0, lacunarity, gain, octaves) * zInfluence;
-                }
-                else {
-                    right.x = x + spaceBetweenVerticesH;
-                    right.z = stb_perlin_fbm_noise3(x + spaceBetweenVerticesH, y, 0, lacunarity, gain, octaves) * zInfluence;
-                }
-
-                if (currentRow - 1 < 0) {
-                    up.y = y;
-                    up.z = stb_perlin_fbm_noise3(x, y, 0, lacunarity, gain, octaves) * zInfluence;
-                }
-                else {
-                    up.y = y - spaceBetweenVerticesV;
-                    up.z = stb_perlin_fbm_noise3(x, y - spaceBetweenVerticesV, 0, lacunarity, gain, octaves) * zInfluence;
-                }
-
-                if (currentRow + 1 >= m_gridY) {
-                    down.y = y;
-                    down.z = stb_perlin_fbm_noise3(x, y, 0, lacunarity, gain, octaves) * zInfluence;
-                }
-                else {
-                    down.y = y + spaceBetweenVerticesV;
-                    down.z = stb_perlin_fbm_noise3(x, y + spaceBetweenVerticesV, 0, lacunarity, gain, octaves) * zInfluence;
-                }
-
-                float deltaX = float(right.z - left.z) / (right.x - left.x);
-                float deltaY = float(up.z - down.z) / (up.y - down.y);
-                Vector3 normal(deltaX, deltaY, 1);
-                vertexAttributes[row * m_gridX * 4 + column * 4 + i].normal = normal.Normalize();
+                //Triangle 2
+                indices.push_back(bottom_right);
+                indices.push_back(top_left);
+                indices.push_back(top_right);
             }
         }
     }
 
-    // (todo) 01.1: Initialize VAO, and VBO
-    m_VAO.Bind();
+    // Compute normals when we have the positions of all the vertices
+    // Iterate AGAIN over each vertex
+    for (unsigned int j = 0; j < rowCount; ++j)
+    {
+        for (unsigned int i = 0; i < columnCount; ++i)
+        {
+            // Get the vertex at (i, j)
+            int index = j * columnCount + i;
+            Vertex& vertex = vertices[index];
 
-    int vertexCount = m_gridX * m_gridY * 4;
-    m_VBO.Bind();
-    m_VBO.AllocateData(std::span(vertexAttributes));
+            // Compute the delta in X
+            unsigned int prevX = i > 0 ? index - 1 : index;
+            unsigned int nextX = i < m_gridX ? index + 1 : index;
+            float deltaHeightX = vertices[nextX].position.z - vertices[prevX].position.z;
+            float deltaX = vertices[nextX].position.x - vertices[prevX].position.x;
+            float x = deltaHeightX / deltaX;
 
-    VertexAttribute position(Data::Type::Float, 3);
-    VertexAttribute textureCoordinate(Data::Type::Float, 2);
-    VertexAttribute color(Data::Type::Float, 3);
-    VertexAttribute normal(Data::Type::Float, 3);
+            // Compute the delta in Y
+            int prevY = j > 0 ? index - columnCount : index;
+            int nextY = j < m_gridY ? index + columnCount : index;
+            float deltaHeightY = vertices[nextY].position.z - vertices[prevY].position.z;
+            float deltaY = vertices[nextY].position.y - vertices[prevY].position.y;
+            float y = deltaHeightY / deltaY;
 
-    m_VAO.SetAttribute(0, position, 0, sizeof(Vertex));
-    m_VAO.SetAttribute(1, textureCoordinate, sizeof(Vector3), sizeof(Vertex));
-    m_VAO.SetAttribute(2, color, sizeof(Vector3) + sizeof(Vector2), sizeof(Vertex));
-    m_VAO.SetAttribute(3, normal, sizeof(Vector3) + sizeof(Vector2) + sizeof(Vector3), sizeof(Vertex));
+            // Compute the normal
+            vertex.normal = Vector3(x, y, 1.0f).Normalize();
+        }
+    }
 
-    // (todo) 01.5: Initialize EBO
-    m_EBO.Bind();
-    m_EBO.AllocateData<unsigned int>(std::span(indices));
+    // Declare attributes
+    VertexAttribute positionAttribute(Data::Type::Float, 3);
+    VertexAttribute texCoordAttribute(Data::Type::Float, 2);
+    VertexAttribute colorAttribute(Data::Type::Float, 3);
+    VertexAttribute normalAttribute(Data::Type::Float, 3);
 
+    // Compute offsets inside the VERTEX STRUCT
+    size_t positionOffset = 0u;
+    size_t texCoordOffset = positionOffset + positionAttribute.GetSize();
+    size_t colorOffset = texCoordOffset + texCoordAttribute.GetSize();
+    size_t normalOffset = colorOffset + colorAttribute.GetSize();
 
-    // (todo) 01.1: Unbind VAO, and VBO
-    m_VAO.Unbind();
-    m_VBO.Unbind();
+    // Allocate uninitialized data for the total size in the VBO
+    m_vbo.Bind();
+    m_vbo.AllocateData(std::span(vertices));
 
-    // (todo) 01.5: Unbind EBO
-    m_EBO.Unbind();
+    // The stride is not automatic now. Each attribute element is "sizeof(Vertex)" bytes apart from next
+    GLsizei stride = sizeof(Vertex);
 
+    // Set the pointer to the data in the VAO (notice that this offsets are for a single element)
+    m_vao.Bind();
+    m_vao.SetAttribute(0, positionAttribute, static_cast<GLint>(positionOffset), stride);
+    m_vao.SetAttribute(1, texCoordAttribute, static_cast<GLint>(texCoordOffset), stride);
+    m_vao.SetAttribute(2, colorAttribute, static_cast<GLint>(colorOffset), stride);
+    m_vao.SetAttribute(3, normalAttribute, static_cast<GLint>(normalOffset), stride);
+
+    // With VAO bound, bind EBO to register it (and allocate element buffer at the same time)
+    m_ebo.Bind();
+    m_ebo.AllocateData(std::span(indices));
+
+    // Unbind VAO, and VBO
+    VertexBufferObject::Unbind();
+    VertexArrayObject::Unbind();
+
+    // Unbind EBO (when VAO is no longer bound)
+    ElementBufferObject::Unbind();
+
+    // Enable wireframe mode
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    // Enable depth buffer
+    glEnable(GL_DEPTH_TEST);
 }
 
 void TerrainApplication::Update()
@@ -258,20 +192,46 @@ void TerrainApplication::Render()
     // Clear color and depth
     GetDevice().Clear(true, Color(0.0f, 0.0f, 0.0f, 1.0f), true, 1.0f);
 
-    m_VAO.Bind();
-
     // Set shader to be used
     glUseProgram(m_shaderProgram);
 
-    // (todo) 01.1: Draw the grid
+    // Bind the grid VAO
+    m_vao.Bind();
 
-    glDrawElements(GL_TRIANGLES, 2 * 3 * m_gridX * m_gridY, GL_UNSIGNED_INT, 0);
+    // Draw the grid (m_gridX * m_gridY quads, 6 vertices per quad)
+    glDrawElements(GL_TRIANGLES, m_gridX * m_gridY * 6, GL_UNSIGNED_INT, nullptr);
 
+    // No need to unbind every time
+    //VertexArrayObject::Unbind();
 }
 
 void TerrainApplication::Cleanup()
 {
     Application::Cleanup();
+}
+
+Vector3 GetColorFromHeight(float height)
+{
+    if (height > 0.3f)
+    {
+        return Vector3(1.0f, 1.0f, 1.0f); // Snow
+    }
+    else if (height > 0.1f)
+    {
+        return Vector3(0.3f, 0.3f, 0.35f); // Rock
+    }
+    else if (height > -0.05f)
+    {
+        return Vector3(0.1f, 0.4f, 0.15f); // Grass
+    }
+    else if (height > -0.1f)
+    {
+        return Vector3(0.6f, 0.5f, 0.4f); // Sand
+    }
+    else
+    {
+        return Vector3(0.1f, 0.1f, 0.3f); // Water
+    }
 }
 
 void TerrainApplication::BuildShaders()
@@ -303,19 +263,19 @@ void TerrainApplication::BuildShaders()
         "   switch (Mode)\n"
         "   {\n"
         "   default:\n"
-        "   case 0:\n"
+        "   case 0u:\n"
         "       FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
         "       break;\n"
-        "   case 1:\n"
+        "   case 1u:\n"
         "       FragColor = vec4(fract(texCoord), 0.0f, 1.0f);\n"
         "       break;\n"
-        "   case 2:\n"
+        "   case 2u:\n"
         "       FragColor = vec4(color, 1.0f);\n"
         "       break;\n"
-        "   case 3:\n"
+        "   case 3u:\n"
         "       FragColor = vec4(normalize(normal), 1.0f);\n"
         "       break;\n"
-        "   case 4:\n"
+        "   case 4u:\n"
         "       FragColor = vec4(color * max(dot(normalize(normal), normalize(vec3(1,0,1))), 0.2f), 1.0f);\n"
         "       break;\n"
         "   }\n"

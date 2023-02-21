@@ -12,7 +12,7 @@
 #include <numbers>  // for PI constant
 #include <glm/gtx/transform.hpp>  // for matrix transformations
 
-float rotationSpeed = 0.5;
+float rotationSpeed = 1;
 
 GearsApplication::GearsApplication()
     : Application(1024, 1024, "Gears demo")
@@ -61,12 +61,17 @@ void GearsApplication::Render()
 
     // (todo) 03.2: Draw medium gear to the right
     glm::mat4 translationMatrixMedium = glm::translate(glm::vec3(0.75f, 0, 0));
-    glm::mat4 rotationMatrixMedium = glm::rotate(-rotationSpeed * 16 / 8 * GetCurrentTime(), glm::vec3(0, 0, 1));
+    glm::mat4 rotationMatrixMedium = glm::rotate(-rotationSpeed * 16/8 * GetCurrentTime(), glm::vec3(0, 0, 1));
     glm::mat4 transformationMatrixMedium = translationMatrixMedium * rotationMatrixMedium;
     DrawGear(m_mediumGear, transformationMatrixMedium, Color(0.0f, 1.0f, 0.0f));
 
 
     // (todo) 03.3: Draw small gear at the top-left corner
+    glm::mat4 translationMatrixSmall= glm::translate(glm::vec3(-1, 1, 0));
+    glm::mat4 scaleMatrixSmall = glm::scale(glm::vec3(7.5f, 7.5f, 7.5f));
+    glm::mat4 rotationMatrixSmall = glm::rotate(10 - rotationSpeed * 0.5325f * GetCurrentTime(), glm::vec3(0, 0, 1));
+    glm::mat4 transformationMatrixSmall = translationMatrixSmall * rotationMatrixSmall * scaleMatrixSmall;
+    DrawGear(m_smallGear, transformationMatrixSmall, Color(0.0f, 0.0f, 1.0f));
 
 
     // (todo) 03.4: Draw small gear linked to the center gear

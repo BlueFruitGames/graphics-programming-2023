@@ -42,13 +42,10 @@ void GearsApplication::Update()
 
     window.GetDimensions(width, height);
 
-    float maxX = float(width) / float(height);
-
-    glm::vec3 min(-maxX, -1.0f, 0.0f);
-    glm::vec3 max(maxX, 1.0f, 0.0f);
+    float aspectRatio = float(width) / float(height);
 
     // (todo) 03.5: Update the camera matrices
-    m_camera.SetOrthographicProjectionMatrix(min, max);
+    m_camera.SetPerspectiveProjectionMatrix(std::numbers::pi/2, aspectRatio,0.1, 10);
 
     glm::vec2 mousePos = window.GetMousePosition(true);
     glm::vec3 targetPos(mousePos.x, mousePos.y, 0);

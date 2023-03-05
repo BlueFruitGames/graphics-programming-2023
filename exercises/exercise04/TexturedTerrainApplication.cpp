@@ -89,6 +89,10 @@ void TexturedTerrainApplication::InitializeTextures()
 
     // (todo) 04.3: Load terrain textures here
 
+    m_dirtTexture = LoadTexture("textures/dirt.png");
+    m_grassTexture = LoadTexture("textures/grass.jpg");
+    m_rockTexture = LoadTexture("textures/rock.jpg");
+    m_snowTexture = LoadTexture("textures/snow.jpg");
 
     // (todo) 04.5: Load water texture here
 
@@ -115,10 +119,17 @@ void TexturedTerrainApplication::InitializeMaterials()
     m_terrainMaterial_00 = std::make_shared<Material>(terrainShaderProgram);
     m_terrainMaterial_00->SetUniformValue("Heightmap", m_heightTexture_00);
 
-    m_dirt_00 = LoadTexture("textures/grass.jpg");
-    m_terrainMaterial_00->SetUniformValue("ColorTexture", m_dirt_00);
+
+    m_terrainMaterial_00->SetUniformValue("DirtTexture", m_dirtTexture);
+    m_terrainMaterial_00->SetUniformValue("GrassTexture", m_grassTexture);
+    m_terrainMaterial_00->SetUniformValue("RockTexture", m_rockTexture);
+    m_terrainMaterial_00->SetUniformValue("SnowTexture", m_snowTexture);
+
+    m_terrainMaterial_00->SetUniformValue("GrassHeightRange", glm::vec2(-.25f, -0.1f));
+    m_terrainMaterial_00->SetUniformValue("RockHeightRange", glm::vec2(-.1f, 0.1f));
+    m_terrainMaterial_00->SetUniformValue("SnowHeightRange", glm::vec2(0.2f, .3f));
+
     m_terrainMaterial_00->SetUniformValue("ColorTextureScale", glm::vec2(0.01));
-    //m_terrainMaterial_00->SetUniformValue("Color", glm::vec4(1.0f));
 
     m_terrainMaterial_01 = std::make_shared<Material>(*m_terrainMaterial_00);
     m_terrainMaterial_01->SetUniformValue("Heightmap", m_heightTexture_01);

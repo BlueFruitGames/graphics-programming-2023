@@ -42,15 +42,24 @@ private:
     ShaderLoader m_vertexShaderLoader;
     ShaderLoader m_fragmentShaderLoader;
 
-    Mesh m_terrainPatch;
+    Mesh m_terrainPatch_00;
+    Mesh m_terrainPatch_01;
+    Mesh m_terrainPatch_02;
+    Mesh m_terrainPatch_03;
     std::shared_ptr<Material> m_defaultMaterial;
 
     // (todo) 04.X: Add additional materials
-    std::shared_ptr<Material> m_terrainMaterial;
+    std::shared_ptr<Material> m_terrainMaterial_00;
+    std::shared_ptr<Material> m_terrainMaterial_01;
+    std::shared_ptr<Material> m_terrainMaterial_02;
+    std::shared_ptr<Material> m_terrainMaterial_03;
 
 
     std::shared_ptr<Texture2DObject> m_defaultTexture;
 
     // (todo) 04.X: Add additional textures
-    std::shared_ptr<Texture2DObject> m_heightTexture;
+    std::shared_ptr<Texture2DObject> m_heightTexture_00;
+    std::shared_ptr<Texture2DObject> m_heightTexture_01;
+    std::shared_ptr<Texture2DObject> m_heightTexture_02;
+    std::shared_ptr<Texture2DObject> m_heightTexture_03;
 };

@@ -40,7 +40,7 @@ void TexturedTerrainApplication::Initialize()
     GetDevice().EnableFeature(GL_DEPTH_TEST);
 
     //Enable wireframe
-    GetDevice().SetWireframeEnabled(true);
+    //GetDevice().SetWireframeEnabled(true);
 }
 
 void TexturedTerrainApplication::Update()
@@ -114,19 +114,20 @@ void TexturedTerrainApplication::InitializeMaterials()
 
     m_terrainMaterial_00 = std::make_shared<Material>(terrainShaderProgram);
     m_terrainMaterial_00->SetUniformValue("Heightmap", m_heightTexture_00);
-    m_terrainMaterial_00->SetUniformValue("Color", glm::vec4(1.0f));
 
-    m_terrainMaterial_01 = std::make_shared<Material>(terrainShaderProgram);
+    m_dirt_00 = LoadTexture("textures/grass.jpg");
+    m_terrainMaterial_00->SetUniformValue("ColorTexture", m_dirt_00);
+    m_terrainMaterial_00->SetUniformValue("ColorTextureScale", glm::vec2(0.01));
+    //m_terrainMaterial_00->SetUniformValue("Color", glm::vec4(1.0f));
+
+    m_terrainMaterial_01 = std::make_shared<Material>(*m_terrainMaterial_00);
     m_terrainMaterial_01->SetUniformValue("Heightmap", m_heightTexture_01);
-    m_terrainMaterial_01->SetUniformValue("Color", glm::vec4(1.0f));
 
-    m_terrainMaterial_02 = std::make_shared<Material>(terrainShaderProgram);
+    m_terrainMaterial_02 = std::make_shared<Material>(*m_terrainMaterial_00);
     m_terrainMaterial_02->SetUniformValue("Heightmap", m_heightTexture_02);
-    m_terrainMaterial_02->SetUniformValue("Color", glm::vec4(1.0f));
 
-    m_terrainMaterial_03 = std::make_shared<Material>(terrainShaderProgram);
+    m_terrainMaterial_03 = std::make_shared<Material>(*m_terrainMaterial_00);
     m_terrainMaterial_03->SetUniformValue("Heightmap", m_heightTexture_03);
-    m_terrainMaterial_03->SetUniformValue("Color", glm::vec4(1.0f));
 
 
     // (todo) 04.5: Add water shader and material here
@@ -174,18 +175,20 @@ std::shared_ptr<Texture2DObject> TexturedTerrainApplication::LoadTexture(const c
     int width = 0;
     int height = 0;
     int components = 0;
-    
+
     
     // (todo) 04.3: Load the texture data here
-    unsigned char* data = nullptr;
+    unsigned char* data = stbi_load(path, &width, &height, &components, 4);;
 
     texture->Bind();
     texture->SetImage(0, width, height, TextureObject::FormatRGBA, TextureObject::InternalFormatRGBA, std::span<const unsigned char>(data, width * height * 4));
 
-    // (todo) 04.3: Generate mipmaps
 
+    // (todo) 04.3: Generate mipmaps
+    texture->GenerateMipmap();
 
     // (todo) 04.3: Release texture data
+    stbi_image_free(data);
 
 
     return texture;

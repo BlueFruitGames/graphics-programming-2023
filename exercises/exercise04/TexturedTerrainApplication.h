@@ -62,4 +62,7 @@ private:
     std::shared_ptr<Texture2DObject> m_heightTexture_01;
     std::shared_ptr<Texture2DObject> m_heightTexture_02;
     std::shared_ptr<Texture2DObject> m_heightTexture_03;
+
+
+    std::shared_ptr<Texture2DObject> m_dirt_00;
 };

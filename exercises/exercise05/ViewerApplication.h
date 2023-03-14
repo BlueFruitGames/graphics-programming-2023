@@ -56,4 +56,5 @@ private:
     glm::vec3 m_lightColor;
     glm::vec3 m_lightPosition;
     float m_lightIntensity;
+    float m_specularExponent;
 };

@@ -77,6 +77,7 @@ void ViewerApplication::InitializeModel()
     ShaderUniformCollection::NameSet filteredUniforms;
     filteredUniforms.insert("WorldMatrix");
     filteredUniforms.insert("ViewProjMatrix");
+    filteredUniforms.insert("CameraPosition");
     filteredUniforms.insert("AmbientColor");
     filteredUniforms.insert("LightColor");
 
@@ -85,6 +86,8 @@ void ViewerApplication::InitializeModel()
     //material->SetUniformValue("Color", glm::vec4(1.0f));
     material->SetUniformValue("AmbientReflection", 1.0f);
     material->SetUniformValue("DiffuseReflection", 1.0f);
+    material->SetUniformValue("SpecularReflection", 1.0f);
+    material->SetUniformValue("SpecularExponent", 200.0f);
 
     // Setup function
     ShaderProgram::Location worldMatrixLocation = shaderProgram->GetUniformLocation("WorldMatrix");
@@ -92,6 +95,8 @@ void ViewerApplication::InitializeModel()
     ShaderProgram::Location ambientColorLocation = shaderProgram->GetUniformLocation("AmbientColor");
     ShaderProgram::Location lightColorLocation = shaderProgram->GetUniformLocation("LightColor");
     ShaderProgram::Location lightPositionLocation = shaderProgram->GetUniformLocation("LightPosition");
+    ShaderProgram::Location cameraPositionLocation = shaderProgram->GetUniformLocation("CameraPosition");
+    ShaderProgram::Location specularExponentLocation = shaderProgram->GetUniformLocation("SpecularExponent");
     material->SetShaderSetupFunction([=](ShaderProgram& shaderProgram)
         {
             shaderProgram.SetUniform(worldMatrixLocation, glm::scale(glm::vec3(0.1f)));
@@ -101,6 +106,8 @@ void ViewerApplication::InitializeModel()
             shaderProgram.SetUniform(ambientColorLocation, m_ambientColor);
             shaderProgram.SetUniform(lightColorLocation, m_lightColor * m_lightIntensity);
             shaderProgram.SetUniform(lightPositionLocation, m_lightPosition);
+            shaderProgram.SetUniform(cameraPositionLocation, m_cameraPosition);
+            shaderProgram.SetUniform(specularExponentLocation, m_specularExponent);
 
         });
 
@@ -154,6 +161,7 @@ void ViewerApplication::InitializeLights()
     m_lightColor = glm::vec3(1);
     m_lightPosition = glm::vec3(-10.0f, 20.0f, 10.0f);
     m_lightIntensity = 1.0f;
+    m_specularExponent = 200.0f;
 }
 
 void ViewerApplication::RenderGUI()
@@ -165,6 +173,7 @@ void ViewerApplication::RenderGUI()
     ImGui::ColorEdit3("LightColor", &m_lightColor[0]);
     ImGui::ColorEdit3("LightPosition", &m_lightPosition[0]);
     ImGui::ColorEdit3("AmbientColor", &m_ambientColor[0]);
+    ImGui::DragFloat("SpecularExponent", &m_specularExponent);
 
     m_imGui.EndFrame();
 }

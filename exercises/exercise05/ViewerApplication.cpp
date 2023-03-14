@@ -49,10 +49,12 @@ void ViewerApplication::Render()
 {
     Application::Render();
 
+
     // Clear color and depth
     GetDevice().Clear(true, Color(0.0f, 0.0f, 0.0f, 1.0f), true, 1.0f);
 
     m_model.Draw();
+    RenderGUI();
 }
 
 void ViewerApplication::Cleanup()
@@ -77,7 +79,6 @@ void ViewerApplication::InitializeModel()
     filteredUniforms.insert("ViewProjMatrix");
     filteredUniforms.insert("AmbientColor");
     filteredUniforms.insert("LightColor");
-    filteredUniforms.insert("LightPosition");
 
     // Create reference material
     std::shared_ptr<Material> material = std::make_shared<Material>(shaderProgram, filteredUniforms);
@@ -149,6 +150,10 @@ void ViewerApplication::InitializeLights()
 {
     // (todo) 05.X: Initialize light variables
 
+    m_ambientColor = glm::vec3(0.25f);
+    m_lightColor = glm::vec3(1);
+    m_lightPosition = glm::vec3(-10.0f, 20.0f, 10.0f);
+    m_lightIntensity = 1.0f;
 }
 
 void ViewerApplication::RenderGUI()
@@ -156,6 +161,10 @@ void ViewerApplication::RenderGUI()
     m_imGui.BeginFrame();
 
     // (todo) 05.4: Add debug controls for light properties
+    ImGui::DragFloat("LightIntensity", &m_lightIntensity);
+    ImGui::ColorEdit3("LightColor", &m_lightColor[0]);
+    ImGui::ColorEdit3("LightPosition", &m_lightPosition[0]);
+    ImGui::ColorEdit3("AmbientColor", &m_ambientColor[0]);
 
     m_imGui.EndFrame();
 }

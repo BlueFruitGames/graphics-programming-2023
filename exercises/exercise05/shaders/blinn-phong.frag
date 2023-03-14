@@ -23,7 +23,7 @@ vec3 GetAmbientReflection(){
 }
 
 vec3 GetDiffuseReflection(vec3 LightVector, vec3 WorldNormalNormalized){
-	return texture(ColorTexture, TexCoord).xyz * LightColor * DiffuseReflection * clamp(dot(WorldNormalNormalized,LightVector),0,1);
+	return LightColor * DiffuseReflection * texture(ColorTexture, TexCoord).xyz * max(dot(LightVector,WorldNormalNormalized),0);
 }
 
 vec3 GetBlinnPhongReflection(vec3 LightVector, vec3 WorldNormalNormalized) {

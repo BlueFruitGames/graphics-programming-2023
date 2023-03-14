@@ -52,5 +52,8 @@ private:
     std::shared_ptr<Texture2DObject> millTexture;
 
     // (todo) 05.X: Add light variables
-    glm::vec3 m_ambientColor = glm::vec3(0.25f);
+    glm::vec3 m_ambientColor = glm::vec3(0.75f);
+    glm::vec3 m_lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 m_lightPosition = glm::vec3(1, 1, 0);
+    float m_lightIntensity = 5.0f;
 };

@@ -76,16 +76,21 @@ void ViewerApplication::InitializeModel()
     filteredUniforms.insert("WorldMatrix");
     filteredUniforms.insert("ViewProjMatrix");
     filteredUniforms.insert("AmbientColor");
+    filteredUniforms.insert("LightColor");
+    filteredUniforms.insert("LightPosition");
 
     // Create reference material
     std::shared_ptr<Material> material = std::make_shared<Material>(shaderProgram, filteredUniforms);
     //material->SetUniformValue("Color", glm::vec4(1.0f));
     material->SetUniformValue("AmbientReflection", 1.0f);
+    material->SetUniformValue("DiffuseReflection", 1.0f);
 
     // Setup function
     ShaderProgram::Location worldMatrixLocation = shaderProgram->GetUniformLocation("WorldMatrix");
     ShaderProgram::Location viewProjMatrixLocation = shaderProgram->GetUniformLocation("ViewProjMatrix");
     ShaderProgram::Location ambientColorLocation = shaderProgram->GetUniformLocation("AmbientColor");
+    ShaderProgram::Location lightColorLocation = shaderProgram->GetUniformLocation("LightColor");
+    ShaderProgram::Location lightPositionLocation = shaderProgram->GetUniformLocation("LightPosition");
     material->SetShaderSetupFunction([=](ShaderProgram& shaderProgram)
         {
             shaderProgram.SetUniform(worldMatrixLocation, glm::scale(glm::vec3(0.1f)));
@@ -93,6 +98,8 @@ void ViewerApplication::InitializeModel()
 
             // (todo) 05.X: Set camera and light uniforms
             shaderProgram.SetUniform(ambientColorLocation, m_ambientColor);
+            shaderProgram.SetUniform(lightColorLocation, m_lightColor * m_lightIntensity);
+            shaderProgram.SetUniform(lightPositionLocation, m_lightPosition);
 
         });
 

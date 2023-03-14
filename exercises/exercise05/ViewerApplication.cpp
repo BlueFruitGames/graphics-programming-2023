@@ -8,6 +8,8 @@
 #include <glm/gtx/transform.hpp>
 #include <imgui.h>
 
+#include <iostream>
+
 ViewerApplication::ViewerApplication()
     : Application(1024, 1024, "Viewer demo")
     , m_cameraPosition(0, 30, 30)
@@ -93,6 +95,7 @@ void ViewerApplication::InitializeModel()
 
     // Configure loader
     ModelLoader loader(material);
+    loader.SetCreateMaterials(true);
     loader.SetMaterialAttribute(VertexAttribute::Semantic::Position, "VertexPosition");
     loader.SetMaterialAttribute(VertexAttribute::Semantic::Normal, "VertexNormal");
     loader.SetMaterialAttribute(VertexAttribute::Semantic::TexCoord0, "VertexTexCoord");
@@ -101,6 +104,24 @@ void ViewerApplication::InitializeModel()
     m_model = loader.Load("models/mill/Mill.obj");
 
     // (todo) 05.1: Load and set textures
+    Texture2DLoader texture2DLoader(TextureObject::FormatRGB,TextureObject::InternalFormatRGB8);
+    texture2DLoader.SetFlipVertical(true);
+
+    groundShadowTexture = texture2DLoader.LoadShared("models/mill/Ground_shadow.jpg");     
+    groundTexture = texture2DLoader.LoadShared("models/mill/Ground_color.jpg");
+    millTexture = texture2DLoader.LoadShared("models/mill/MillCat_color.jpg");
+
+    Material& groundShadow = m_model.GetMaterial(0);
+    groundShadow.SetUniformValue("Color", glm::vec4(1, 1, 1, 1));
+    groundShadow.SetUniformValue("ColorTexture", groundShadowTexture);
+
+    Material& ground = m_model.GetMaterial(1);
+    ground.SetUniformValue("Color", glm::vec4(1, 1, 1, 1));
+    ground.SetUniformValue("ColorTexture", groundTexture);
+
+    Material& mill = m_model.GetMaterial(2);
+    mill.SetUniformValue("Color", glm::vec4(1, 1, 1, 1));
+    mill.SetUniformValue("ColorTexture", millTexture);
 
 }
 

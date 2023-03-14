@@ -46,6 +46,11 @@ private:
     // Loaded model
     Model m_model;
 
+    std::shared_ptr<Texture2DObject> groundShadowTexture;
+    std::shared_ptr<Texture2DObject> groundTexture;
+
+    std::shared_ptr<Texture2DObject> millTexture;
+
     // (todo) 05.X: Add light variables
 
 

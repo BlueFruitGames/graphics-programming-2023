@@ -6,6 +6,7 @@ Shader "CG2023/CelShading"
         _AlbedoTexture("Albedo Texture", 2D) = "white" {}
         _Reflectance("Reflectance (Ambient, Diffuse, Specular)", Vector) = (1, 1, 1, 0)
         _SpecularExponent("Specular Exponent", Float) = 100.0
+        _Levels("Levels", Int) = 3
     }
 
     SubShader
@@ -21,6 +22,7 @@ Shader "CG2023/CelShading"
         uniform vec4 _AlbedoTexture_ST;
         uniform vec4 _Reflectance;
         uniform float _SpecularExponent;
+        uniform int _Levels;
         ENDGLSL
 
         Pass
@@ -64,8 +66,12 @@ Shader "CG2023/CelShading"
                 albedo *= _Albedo.rgb;
 
                 vec3 lighting = BlinnPhongLighting(lightDir, viewDir, normal, albedo, vec3(1.0f), _Reflectance.x, _Reflectance.y, _Reflectance.z, _SpecularExponent);
+                float intensity = ceil(GetColorLuminance(lighting) * _Levels)/_Levels;
+                
+                gl_FragColor = vec4((intensity * vec3(1.0f) * _LightColor0.xyz), 1.0f);
 
-                gl_FragColor = vec4(lighting, 1.0f);
+                
+                
             }
             #endif // FRAGMENT
 
@@ -90,6 +96,7 @@ Shader "CG2023/CelShading"
 
             #ifdef VERTEX
             out vertexToFragment v2f;
+            
 
             void main()
             {
@@ -98,6 +105,7 @@ Shader "CG2023/CelShading"
                 v2f.texCoords = TransformTexCoords(gl_MultiTexCoord0.xy, _AlbedoTexture_ST);
 
                 gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+                
             }
             #endif // VERTEX
 
@@ -113,10 +121,10 @@ Shader "CG2023/CelShading"
 
                 vec3 albedo = texture(_AlbedoTexture, v2f.texCoords).rgb;
                 albedo *= _Albedo.rgb;
-
                 vec3 lighting = BlinnPhongLighting(lightDir, viewDir, normal, albedo, vec3(1.0f), 0.0f, _Reflectance.y, _Reflectance.z, _SpecularExponent);
-
-                gl_FragColor = vec4(lighting, 1.0f);
+                float intensity = GetColorLuminance(lighting)/_Levels;
+                
+                gl_FragColor = vec4(intensity * vec3(1.0f) * _LightColor0.xyz, 1.0f);                
             }
             #endif // FRAGMENT
 

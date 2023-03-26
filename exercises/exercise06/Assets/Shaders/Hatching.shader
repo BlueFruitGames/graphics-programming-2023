@@ -9,6 +9,7 @@ Shader "CG2023/Hatching"
 
         // TODO exercise 6 - Add the required properties here
         _Thickness("Line Thickness", Float) = 0.01
+        _HatchingArray("Hatching0 Texture", 2DArray) = "white" {}
         
         _Hatching0("Hatching0 Texture", 2D) = "white" {}
         _Hatching1("Hatching1 Texture", 2D) = "white" {}
@@ -34,6 +35,7 @@ Shader "CG2023/Hatching"
         
         // TODO exercise 6 - Add the required uniforms here
         uniform float _Thickness;
+        uniform sampler2DArray _HatchingArray;
         uniform sampler2D _Hatching0;
         uniform sampler2D _Hatching1;
         uniform sampler2D _Hatching2;
@@ -42,6 +44,7 @@ Shader "CG2023/Hatching"
         uniform sampler2D _Hatching5;
         
         uniform vec4 _Hatching0_ST;
+        uniform vec4 _HatchingArray_ST;
 
 
 
@@ -62,7 +65,7 @@ Shader "CG2023/Hatching"
             // TODO exercise 6.3 - Depending on the intensity, choose up to 2 textures to sample and mix them based on the blending factor. That would be the hatching intensity
             float hatchingIntensity;
 
-            if(level < 1)
+            /*if(level < 1)
                 hatchingIntensity = mix(0.0, texture(_Hatching5, texCoords).r, alpha);
             else if(level < 2)
                 hatchingIntensity = mix(texture(_Hatching5, texCoords).r, texture(_Hatching4, texCoords).r, alpha);
@@ -75,12 +78,11 @@ Shader "CG2023/Hatching"
             else if(level < 6)
                 hatchingIntensity = mix(texture(_Hatching1, texCoords).r, texture(_Hatching0, texCoords).r, alpha);
             else
-                hatchingIntensity = mix(texture(_Hatching0, texCoords).r, 1.0, alpha);
+                hatchingIntensity = mix(texture(_Hatching0, texCoords).r, 1.0, alpha);*/
             
             // TODO exercise 6.4 - Replace the previous step with 2 samples from the texture array. Mix them based on the blending factor to get the hatching intensity
-
+            hatchingIntensity = mix(texture(_HatchingArray, vec3(texCoords.xy, floor(level))).r, texture(_HatchingArray, vec3(texCoords.xy, ceil(level))).r, alpha);
             return hatchingIntensity.r;
-            
         }
         ENDGLSL
 
@@ -108,7 +110,7 @@ Shader "CG2023/Hatching"
                 v2f.texCoords.xy = TransformTexCoords(gl_MultiTexCoord0.xy, _AlbedoTexture_ST);
 
                 // TODO exercise 6.3 - Transform hatching texture coordinates and pass to the fragment
-                v2f.texCoords.zw = TransformTexCoords(gl_MultiTexCoord0.xy, _Hatching0_ST);
+                v2f.texCoords.zw = TransformTexCoords(gl_MultiTexCoord0.xy, _HatchingArray_ST);
 
                 gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
                 
@@ -167,7 +169,7 @@ Shader "CG2023/Hatching"
                 v2f.texCoords.xy = TransformTexCoords(gl_MultiTexCoord0.xy, _AlbedoTexture_ST);
 
                 // TODO exercise 6.3 - Transform hatching texture coordinates and pass to the fragment
-                v2f.texCoords.zw = TransformTexCoords(gl_MultiTexCoord0.xy, _Hatching0_ST);
+                v2f.texCoords.zw = TransformTexCoords(gl_MultiTexCoord0.xy, _HatchingArray_ST);
 
                 gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
             }

@@ -7,6 +7,7 @@ Shader "CG2023/CelShading"
         _Reflectance("Reflectance (Ambient, Diffuse, Specular)", Vector) = (1, 1, 1, 0)
         _SpecularExponent("Specular Exponent", Float) = 100.0
         _Levels("Levels", Int) = 3
+        _Thickness("Line Thickness", Float) = 0.01
     }
 
     SubShader
@@ -23,6 +24,7 @@ Shader "CG2023/CelShading"
         uniform vec4 _Reflectance;
         uniform float _SpecularExponent;
         uniform int _Levels;
+        uniform float _Thickness;
         ENDGLSL
 
         Pass
@@ -77,6 +79,40 @@ Shader "CG2023/CelShading"
 
             ENDGLSL
         }
+        
+        Pass
+                {
+                    Name "OUTLINE"
+                    Tags { "LightMode" = "ForwardBase" }
+                    CULL Front
+        
+                    GLSLPROGRAM
+        
+                    #ifdef VERTEX
+        
+                    void main()
+                    {
+                        vec3 worldPos = (unity_ObjectToWorld * gl_Vertex).xyz;
+                        vec3 worldNormal = (unity_ObjectToWorld * vec4(gl_Normal, 0.0f)).xyz;
+                        vec3 offsetPos = worldPos + worldNormal * _Thickness;
+                        gl_Position = unity_MatrixVP * vec4(offsetPos.xyz, 1.0);
+                
+                    }
+                    #endif // VERTEX
+        
+                    #ifdef FRAGMENT
+        
+                    void main()
+                    {
+                       gl_FragColor = vec4(0.0f);
+                    }
+                    #endif // FRAGMENT
+        
+                    ENDGLSL
+                }
+        
+        
+        
         Pass
         {
             Name "FORWARD"

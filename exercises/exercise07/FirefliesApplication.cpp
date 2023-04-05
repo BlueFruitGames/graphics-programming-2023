@@ -297,6 +297,7 @@ void FirefliesApplication::InitializeLights()
     // Initialize light variables
     m_ambientColor = glm::vec3(0.25f);
     m_lightColor = glm::vec3(1.0f, 0.8f, 0.3f);
+    m_lightAttenuationDistance = glm::vec2(0.f, 2.f);
     m_lightIntensity = 1.0f;
 }
 
@@ -338,6 +339,7 @@ void FirefliesApplication::RenderGUI()
     ImGui::ColorEdit3("Light color", &m_lightColor[0]);
     ImGui::DragFloat("Light intensity", &m_lightIntensity, 0.05f, 0.0f, 100.0f);
     ImGui::Checkbox("Use random color", &m_useRandomColor);
+    ImGui::DragFloat2("LightAttenuationDistance", &m_lightAttenuationDistance[0]);
 
     m_imGui.EndFrame();
 }
@@ -372,6 +374,7 @@ void FirefliesApplication::UpdateFireflies()
 
         // Copy the position to the light
         firefly.pointLight.SetPosition(worldMatrix[3]);
+        firefly.pointLight.SetDistanceAttenuation(m_lightAttenuationDistance);
 
         m_renderer.AddModel(m_fireflyModel, firefly.worldMatrix);
         m_renderer.AddLight(&firefly.pointLight);

@@ -1,3 +1,4 @@
+
 //Inputs
 in vec2 TexCoord;
 
@@ -14,5 +15,8 @@ uniform mat4 InvProjMatrix;
 
 void main()
 {
-	FragColor = vec4(texture(AlbedoTexture, TexCoord).rgb, 1.0f);
+	vec3 albedo = texture(AlbedoTexture, TexCoord).rgb;
+	vec3 normal = GetImplicitNormal(texture(NormalTexture, TexCoord).xy);
+	
+	FragColor = vec4(normal, 1.0f); //vec4(texture(AlbedoTexture, TexCoord).rgb, 1.0f);
 }

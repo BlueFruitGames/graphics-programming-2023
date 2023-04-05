@@ -20,5 +20,5 @@ void main()
 {
 	FragAlbedo = vec4(texture(ColorTexture, TexCoord).rgb * Color, 1.0f); 
 	FragNormal = ViewNormal.xy;
-	FragOthers = vec4(0.0f);
+	FragOthers = vec4(SpecularReflectance, SpecularReflectance, SpecularReflectance, 1 / (1 + SpecularExponent));
 }

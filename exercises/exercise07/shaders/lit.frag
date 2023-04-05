@@ -22,8 +22,6 @@ void main()
 	SurfaceData data;
 	data.normal = normalize(WorldNormal);
 	data.reflectionColor = Color * texture(ColorTexture, TexCoord).rgb;
-	data.ambientReflectance = AmbientReflectance;
-	data.diffuseReflectance = DiffuseReflectance;
 	data.specularReflectance = SpecularReflectance;
 	data.specularExponent = SpecularExponent;
 

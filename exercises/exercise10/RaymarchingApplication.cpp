@@ -44,8 +44,6 @@ void RaymarchingApplication::Update()
     m_material->SetUniformValue("ProjMatrix", camera.GetProjectionMatrix());
     m_material->SetUniformValue("InvProjMatrix", glm::inverse(camera.GetProjectionMatrix()));
     
-    m_material->SetUniformValue("In_maxDistance", m_sphereCenter);
-    m_material->SetUniformValue("In_maxSteps", m_sphereRadius);
     m_material->SetUniformValue("In_surfaceDistance", m_sphereColor);
 }
 
@@ -96,6 +94,8 @@ void RaymarchingApplication::InitializeMaterial()
 
     m_boxSize = glm::vec3(1, 1, 1);
     m_boxColor = glm::vec3(1, 0, 0);
+
+    m_smoothness = 0.5f;
 }
 
 void RaymarchingApplication::InitializeRenderer()
@@ -172,6 +172,10 @@ void RaymarchingApplication::RenderGUI()
             m_material->SetUniformValue("BoxColor", m_boxColor);
             ImGui::TreePop();
         }
+
+        
+        ImGui::DragFloat("Smoothness", &m_smoothness, 0.1f, 0.0f, 10.0f);
+        m_material->SetUniformValue("Smoothness", m_smoothness);
     }
 
     m_imGui.EndFrame();

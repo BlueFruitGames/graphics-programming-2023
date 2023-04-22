@@ -48,5 +48,7 @@ private:
 
     glm::vec3 m_boxColor;
     glm::vec3 m_boxSize;
+
+    float m_smoothness;
     
 };

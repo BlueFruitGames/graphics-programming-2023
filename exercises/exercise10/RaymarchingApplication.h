@@ -40,4 +40,13 @@ private:
 
     // Materials
     std::shared_ptr<Material> m_material;
+
+
+    float m_sphereRadius;
+    glm::vec3 m_sphereCenter;
+    glm::vec3 m_sphereColor;
+
+    glm::vec3 m_boxColor;
+    glm::vec3 m_boxSize;
+    
 };

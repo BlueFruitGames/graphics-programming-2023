@@ -43,6 +43,10 @@ void RaymarchingApplication::Update()
     // Update the material properties
     m_material->SetUniformValue("ProjMatrix", camera.GetProjectionMatrix());
     m_material->SetUniformValue("InvProjMatrix", glm::inverse(camera.GetProjectionMatrix()));
+    
+    m_material->SetUniformValue("In_maxDistance", m_sphereCenter);
+    m_material->SetUniformValue("In_maxSteps", m_sphereRadius);
+    m_material->SetUniformValue("In_surfaceDistance", m_sphereColor);
 }
 
 void RaymarchingApplication::Render()
@@ -86,6 +90,12 @@ void RaymarchingApplication::InitializeMaterial()
     m_material = CreateRaymarchingMaterial("shaders/exercise10.glsl");
 
     // (todo) 10.X: Initialize material uniforms
+    m_sphereRadius = 1.25f;
+    m_sphereCenter = glm::vec3(-2, 0, -10);
+    m_sphereColor = glm::vec3(0, 0, 1);
+
+    m_boxSize = glm::vec3(1, 1, 1);
+    m_boxColor = glm::vec3(1, 0, 0);
 }
 
 void RaymarchingApplication::InitializeRenderer()
@@ -110,6 +120,7 @@ std::shared_ptr<Material> RaymarchingApplication::CreateRaymarchingMaterial(cons
     fragmentShaderPaths.push_back("shaders/raymarching.frag");
     Shader fragmentShader = ShaderLoader(Shader::FragmentShader).Load(fragmentShaderPaths);
 
+    
     std::shared_ptr<ShaderProgram> shaderProgramPtr = std::make_shared<ShaderProgram>();
     shaderProgramPtr->Build(vertexShader, fragmentShader);
 
@@ -125,7 +136,7 @@ void RaymarchingApplication::RenderGUI()
 
     // Draw GUI for camera controller
     //m_cameraController.DrawGUI(m_imGui);
-
+    glm::mat4 viewMatrix = m_cameraController.GetCamera()->GetCamera()->GetViewMatrix();
     if (auto window = m_imGui.UseWindow("Scene parameters"))
     {
         // (todo) 10.3: Get the camera view matrix and transform the sphere center and the box matrix
@@ -134,6 +145,14 @@ void RaymarchingApplication::RenderGUI()
         {
             // (todo) 10.1: Add controls for sphere parameters
 
+            ImGui::DragFloat("Sphere Radius", &m_sphereRadius, .5f, 0.f, 100.f);
+            ImGui::DragFloat3("Sphere Center", &m_sphereCenter[0]);
+            ImGui::ColorEdit3("Sphere Color", &m_sphereColor[0]);
+            
+    
+            m_material->SetUniformValue("SphereCenter", glm::vec3(viewMatrix * glm::vec4(m_sphereCenter, 1.0f)));
+            m_material->SetUniformValue("SphereRadius", m_sphereRadius);
+            m_material->SetUniformValue("SphereColor", m_sphereColor);
             ImGui::TreePop();
         }
         if (ImGui::TreeNodeEx("Box", ImGuiTreeNodeFlags_DefaultOpen))
@@ -142,7 +161,15 @@ void RaymarchingApplication::RenderGUI()
             static glm::vec3 rotation(0.0f);
 
             // (todo) 10.1: Add controls for box parameters
-
+            ImGui::DragFloat3("BoxSize", &m_boxSize[0]);
+            ImGui::ColorEdit3("BoxColor", &m_boxColor[0]);
+            
+            ImGui::DragFloat3("Translation", &translation[0], 0.1f);
+            ImGui::DragFloat3("Rotation", &rotation[0], 0.1f);
+            
+            m_material->SetUniformValue("BoxMatrix", viewMatrix * glm::translate(translation) * glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z));
+            m_material->SetUniformValue("BoxSize", m_boxSize);
+            m_material->SetUniformValue("BoxColor", m_boxColor);
             ImGui::TreePop();
         }
     }

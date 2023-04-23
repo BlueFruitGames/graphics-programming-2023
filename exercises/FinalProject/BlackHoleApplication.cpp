@@ -96,9 +96,11 @@ void BlackHoleApplication::InitializeMaterial()
     m_material->SetUniformValue("PlaneBendStrength", 0.01f);
     m_material->SetUniformValue("AnimationSpeed", 3.0f);
     
-    m_material->SetUniformValue("SphereRadius", 2.5f);
+    m_material->SetUniformValue("SphereRadius", 4.0f);
     m_material->SetUniformValue("SphereColor", glm::vec3(1, 0, 0));
     m_material->SetUniformValue("SphereRotationSpeed", 1.0f);
+    m_material->SetUniformValue("SphereInfluenceBounds", glm::vec2(-3, 3));
+    m_material->SetUniformValue("SphereInfluence", 5.0f);
    
     //m_material->SetUniformValue("Smoothness", 0.25f);
 }
@@ -170,13 +172,20 @@ void BlackHoleApplication::RenderGUI()
         if (ImGui::TreeNodeEx("BlackHole", ImGuiTreeNodeFlags_DefaultOpen))
         {            
             static glm::vec3 sphereStartPosition(0, -5.f, -25.f);
+            static glm::vec2 sphereInfluenceBounds(-3, 5);
             static float speed = 1.0f;
+            static float influence = -8.f;
 
             ImGui::DragFloat3("StartPosition", &sphereStartPosition[0], 0.1f);
             m_material->SetUniformValue("SphereStartPosition", sphereStartPosition);
             ImGui::DragFloat("RotationSpeed", &speed, 0.1f);
             m_material->SetUniformValue("SphereRotationSpeed", speed);
+            ImGui::DragFloat2("Influence Bounds", &sphereInfluenceBounds[0], 0.1f);
+            m_material->SetUniformValue("SphereInfluenceBounds", sphereInfluenceBounds);
             
+            
+            ImGui::DragFloat("Influence", &influence, 0.1f);
+            m_material->SetUniformValue("SphereInfluence", influence);
             ImGui::DragFloat("Radius", m_material->GetDataUniformPointer<float>("SphereRadius"), 0.1f);
             ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("SphereColor"));
             ImGui::TreePop();

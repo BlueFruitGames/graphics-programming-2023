@@ -27,6 +27,13 @@ float PlaneSDF(vec3 p, vec3 normal, float offset)
 	return dot(p, normal) - offset;
 }
 
+float BendedPlaneSDF(vec3 p, vec3 normal, float offset, vec3 BendOrigin, vec2 bendDistanceBounds)
+{
+	float smoothedDist = smoothstep(bendDistanceBounds.x, bendDistanceBounds.y, distance(p, BendOrigin));
+	float dPlane = dot(p, normal) - smoothedDist *offset; 
+	return dPlane;
+}
+
 // Signed distance field of a sphere
 float SphereSDF(vec3 p, float radius)
 {

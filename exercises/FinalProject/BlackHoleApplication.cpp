@@ -89,8 +89,11 @@ void BlackHoleApplication::InitializeMaterial()
     
     m_material->SetUniformValue("PlaneNormal", glm::vec3(0, 1, 0));
     m_material->SetUniformValue("PlanePosition", glm::vec3(0, 0, 0));
-    m_material->SetUniformValue("PlaneOffset", -5.0f);
+    m_material->SetUniformValue("PlaneOffset", -35.f);
     m_material->SetUniformValue("PlaneColor", glm::vec3(1, 1, 1));
+    m_material->SetUniformValue("BendDistanceBounds", glm::vec2(-1, 1));
+    
+    m_material->SetUniformValue("PlaneBendStrength", 0.01f);
    
     //m_material->SetUniformValue("Smoothness", 0.25f);
 }
@@ -141,14 +144,21 @@ void BlackHoleApplication::RenderGUI()
         if (ImGui::TreeNodeEx("GroundPlane", ImGuiTreeNodeFlags_DefaultOpen))
         {
             static glm::vec3 position(0, 0, 0);
+            static glm::vec3 bendOrigin(0, 0, -50);
+            static glm::vec2 bendDistanceBounds(0, 100);
             static glm::vec3 normal(0, 1, 0);
             
             // Add controls for sphere parameters
             ImGui::DragFloat3("Position", &position[0], 0.1f);
             m_material->SetUniformValue("PlanePosition", glm::vec3(viewMatrix * glm::vec4(position, 1.0f)));
+            ImGui::DragFloat3("Bend Origin", &bendOrigin[0], 0.1f);
+            m_material->SetUniformValue("BendOrigin", bendOrigin);
+            ImGui::DragFloat2("Bend Distance Bounds", &bendDistanceBounds[0], 0.1f);
+            m_material->SetUniformValue("BendDistanceBounds", bendDistanceBounds);
             ImGui::DragFloat3("Normal", &normal[0], 0.1f);
-            m_material->SetUniformValue("PlaneNormal", glm::vec3(viewMatrix * glm::vec4(normal, 1.0f)));
+            m_material->SetUniformValue("PlaneNormal", normal);
             ImGui::DragFloat("Offset", m_material->GetDataUniformPointer<float>("PlaneOffset"), 0.1f);
+            //ImGui::DragFloat("BendStrength", m_material->GetDataUniformPointer<float>("PlaneBendStrength"), 0.1f);
             ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("PlaneColor"));
             
             ImGui::TreePop();

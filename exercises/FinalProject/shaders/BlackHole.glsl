@@ -6,6 +6,8 @@ uniform float PlaneOffset = -5.0f;
 uniform vec3 PlanePosition = vec3(0, 0, 0);
 uniform vec3 PlaneNormal = vec3(0, 1, 0);
 uniform vec3 PlaneColor = vec3(1,1,1);
+uniform vec2 BendDistanceBounds = vec2(-1,1);
+uniform vec3 BendOrigin = vec3(0, 0, 0);
 
 
 // Output structure
@@ -31,7 +33,7 @@ float GetDistance(vec3 p, inout Output o)
 
 	// Replace this with a mix, using the blend factor from SmoothUnion
 	
-	float dGroundPlane = PlaneSDF(TransformToLocalPoint(p, PlanePosition), PlaneNormal, PlaneOffset);
+	float dGroundPlane = BendedPlaneSDF(p, PlaneNormal, PlaneOffset, BendOrigin, BendDistanceBounds);
 	
 	
 	//o.color = mix(SphereColor, BoxColor, blend);

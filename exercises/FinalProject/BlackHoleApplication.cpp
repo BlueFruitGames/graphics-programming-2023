@@ -86,13 +86,13 @@ void BlackHoleApplication::InitializeMaterial()
     m_material = CreateRaymarchingMaterial("shaders/blackhole.glsl");
 
     // Initialize material uniforms
-    m_material->SetUniformValue("SphereCenter", glm::vec3(-2, 0, -10));
-    m_material->SetUniformValue("SphereRadius", 1.25f);
-    m_material->SetUniformValue("SphereColor", glm::vec3(0, 0, 1));
-    m_material->SetUniformValue("BoxMatrix", glm::translate(glm::vec3(2, 0, -10)));
-    m_material->SetUniformValue("BoxSize", glm::vec3(1, 1, 1));
-    m_material->SetUniformValue("BoxColor", glm::vec3(1, 0, 0));
-    m_material->SetUniformValue("Smoothness", 0.25f);
+    
+    m_material->SetUniformValue("PlaneNormal", glm::vec3(0, 1, 0));
+    m_material->SetUniformValue("PlanePosition", glm::vec3(0, 0, 0));
+    m_material->SetUniformValue("PlaneOffset", -5.0f);
+    m_material->SetUniformValue("PlaneColor", glm::vec3(1, 1, 1));
+   
+    //m_material->SetUniformValue("Smoothness", 0.25f);
 }
 
 void BlackHoleApplication::InitializeRenderer()
@@ -138,34 +138,33 @@ void BlackHoleApplication::RenderGUI()
         // Get the camera view matrix and transform the sphere center and the box matrix
         glm::mat4 viewMatrix = m_cameraController.GetCamera()->GetCamera()->GetViewMatrix();
 
-        if (ImGui::TreeNodeEx("Sphere", ImGuiTreeNodeFlags_DefaultOpen))
+        if (ImGui::TreeNodeEx("GroundPlane", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            static glm::vec3 center(-2, 0, -10);
-
+            static glm::vec3 position(0, 0, 0);
+            static glm::vec3 normal(0, 1, 0);
+            
             // Add controls for sphere parameters
-            ImGui::DragFloat3("Center", &center[0], 0.1f);
-            m_material->SetUniformValue("SphereCenter", glm::vec3(viewMatrix * glm::vec4(center, 1.0f)));
-            ImGui::DragFloat("Radius", m_material->GetDataUniformPointer<float>("SphereRadius"), 0.1f);
-            ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("SphereColor"));
-
+            ImGui::DragFloat3("Position", &position[0], 0.1f);
+            m_material->SetUniformValue("PlanePosition", glm::vec3(viewMatrix * glm::vec4(position, 1.0f)));
+            ImGui::DragFloat3("Normal", &normal[0], 0.1f);
+            m_material->SetUniformValue("PlaneNormal", glm::vec3(viewMatrix * glm::vec4(normal, 1.0f)));
+            ImGui::DragFloat("Offset", m_material->GetDataUniformPointer<float>("PlaneOffset"), 0.1f);
+            ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("PlaneColor"));
+            
             ImGui::TreePop();
         }
         if (ImGui::TreeNodeEx("Box", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            static glm::vec3 translation(2, 0, -10);
-            static glm::vec3 rotation(0.0f);
+            //static glm::vec3 translation(2, 0, -10);
+            //static glm::vec3 rotation(0.0f);
 
             // Add controls for box parameters
-            ImGui::DragFloat3("Translation", &translation[0], 0.1f);
-            ImGui::DragFloat3("Rotation", &rotation[0], 0.1f);
-            m_material->SetUniformValue("BoxMatrix", viewMatrix * glm::translate(translation) * glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z));
-            ImGui::DragFloat3("Size", m_material->GetDataUniformPointer<float>("BoxSize"), 0.1f);
-            ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("BoxColor"));
+            //m_material->SetUniformValue("BoxMatrix", viewMatrix * glm::translate(translation) * glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z));
 
             ImGui::TreePop();
         }
 
-        ImGui::DragFloat("Smoothness", m_material->GetDataUniformPointer<float>("Smoothness"), 0.1f);
+        //ImGui::DragFloat("Smoothness", m_material->GetDataUniformPointer<float>("Smoothness"), 0.1f);
     }
 
     m_imGui.EndFrame();

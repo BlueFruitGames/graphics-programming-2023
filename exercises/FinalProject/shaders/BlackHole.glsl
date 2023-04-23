@@ -1,15 +1,12 @@
 
 // Uniforms
 // Replace constants with uniforms with the same name
-uniform vec3 SphereColor = vec3(0, 0, 1);
-uniform vec3 SphereCenter = vec3(-2, 0, -10);
-uniform float SphereRadius = 1.25f;
 
-uniform vec3 BoxColor = vec3(1, 0, 0);
-uniform mat4 BoxMatrix = mat4(1,0,0,0,   0,1,0,0,   0,0,1,0,   2,0,-10,1);
-uniform vec3 BoxSize = vec3(1, 1, 1);
+uniform float PlaneOffset = -5.0f;
+uniform vec3 PlanePosition = vec3(0, 0, 0);
+uniform vec3 PlaneNormal = vec3(0, 1, 0);
+uniform vec3 PlaneColor = vec3(1,1,1);
 
-uniform float Smoothness;
 
 // Output structure
 struct Output
@@ -23,18 +20,24 @@ struct Output
 float GetDistance(vec3 p, inout Output o)
 {
 	// Sphere in position "SphereCenter" and size "SphereRadius"
-	float dSphere = SphereSDF(TransformToLocalPoint(p, SphereCenter), SphereRadius);
+	//float dSphere = SphereSDF(TransformToLocalPoint(p, SphereCenter), SphereRadius);
 
 	// Box with worldView transform "BoxMatrix" and dimensions "BoxSize"
-	float dBox = BoxSDF(TransformToLocalPoint(p, BoxMatrix), BoxSize);
+	//float dBox = BoxSDF(TransformToLocalPoint(p, BoxMatrix), BoxSize);
 
 	// Replace Union with SmoothUnion and try different small values of smoothness
-	float blend;
-	float d = SmoothUnion(dSphere, dBox, Smoothness, blend);
+	//float blend;
+	//float d = SmoothUnion(dSphere, dBox, Smoothness, blend);
 
 	// Replace this with a mix, using the blend factor from SmoothUnion
-	o.color = mix(SphereColor, BoxColor, blend);
-
+	
+	float dGroundPlane = PlaneSDF(TransformToLocalPoint(p, PlanePosition), PlaneNormal, PlaneOffset);
+	
+	
+	//o.color = mix(SphereColor, BoxColor, blend);
+	//d = dGroundPlane;
+	float d = dGroundPlane;
+	o.color = PlaneColor;
 	return d;
 }
 

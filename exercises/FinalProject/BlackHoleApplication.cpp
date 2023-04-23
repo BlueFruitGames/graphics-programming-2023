@@ -95,6 +95,9 @@ void BlackHoleApplication::InitializeMaterial()
     
     m_material->SetUniformValue("PlaneBendStrength", 0.01f);
     m_material->SetUniformValue("Speed", 3.0f);
+    
+    m_material->SetUniformValue("SphereRadius", 2.5f);
+    m_material->SetUniformValue("SphereColor", glm::vec3(1, 0, 0));
    
     //m_material->SetUniformValue("Smoothness", 0.25f);
 }
@@ -144,7 +147,6 @@ void BlackHoleApplication::RenderGUI()
 
         if (ImGui::TreeNodeEx("GroundPlane", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            static glm::vec3 position(0, 0, 0);
             static glm::vec3 bendOrigin(0, 0, -50);
             static glm::vec2 bendDistanceBounds(0, 100);
             static glm::vec3 normal(0, 1, 0);
@@ -164,14 +166,15 @@ void BlackHoleApplication::RenderGUI()
             
             ImGui::TreePop();
         }
-        if (ImGui::TreeNodeEx("Box", ImGuiTreeNodeFlags_DefaultOpen))
-        {
-            //static glm::vec3 translation(2, 0, -10);
-            //static glm::vec3 rotation(0.0f);
+        if (ImGui::TreeNodeEx("BlackHole", ImGuiTreeNodeFlags_DefaultOpen))
+        {            
+            static glm::vec3 sphereStartPosition(0, -5.f, -25.f);
 
-            // Add controls for box parameters
-            //m_material->SetUniformValue("BoxMatrix", viewMatrix * glm::translate(translation) * glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z));
-
+            ImGui::DragFloat3("StartPosition", &sphereStartPosition[0], 0.1f);
+            m_material->SetUniformValue("SphereStartPosition", sphereStartPosition);
+            
+            ImGui::DragFloat("Radius", m_material->GetDataUniformPointer<float>("SphereRadius"), 0.1f);
+            ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("SphereColor"));
             ImGui::TreePop();
         }
         //ImGui::DragFloat("Smoothness", m_material->GetDataUniformPointer<float>("Smoothness"), 0.1f);

@@ -8,6 +8,10 @@ uniform vec3 PlaneColor = vec3(1,1,1);
 uniform vec2 BendDistanceBounds = vec2(-1,1);
 uniform vec3 BendOrigin = vec3(0, 0, 0);
 
+uniform vec3 SphereColor = vec3(0, 0, 1);
+uniform vec3 SphereStartPosition = vec3(-2, 0, -10);
+uniform float SphereRadius = 1.25f;
+
 uniform float Time = 0.0f;
 uniform float Speed = 3.0f;
 
@@ -37,12 +41,15 @@ float GetDistance(vec3 p, inout Output o)
 	
 	float CurrentTime = Time * Speed;
 	float dGroundPlane = BendedPlaneSDF(p, PlaneNormal, PlaneOffset, BendOrigin, BendDistanceBounds, CurrentTime);
+
+
+	float dSphere = SphereSDF(TransformToLocalPoint(p, SphereStartPosition), SphereRadius);
 	
 	
 	//o.color = mix(SphereColor, BoxColor, blend);
 	//d = dGroundPlane;
-	float d = dGroundPlane;
-	o.color = PlaneColor;
+	float d = Union(dSphere, dGroundPlane);
+	o.color = d == dSphere ? SphereColor : PlaneColor;
 	return d;
 }
 

@@ -94,10 +94,11 @@ void BlackHoleApplication::InitializeMaterial()
     m_material->SetUniformValue("BendDistanceBounds", glm::vec2(-1, 1));
     
     m_material->SetUniformValue("PlaneBendStrength", 0.01f);
-    m_material->SetUniformValue("Speed", 3.0f);
+    m_material->SetUniformValue("AnimationSpeed", 3.0f);
     
     m_material->SetUniformValue("SphereRadius", 2.5f);
     m_material->SetUniformValue("SphereColor", glm::vec3(1, 0, 0));
+    m_material->SetUniformValue("SphereRotationSpeed", 1.0f);
    
     //m_material->SetUniformValue("Smoothness", 0.25f);
 }
@@ -161,7 +162,7 @@ void BlackHoleApplication::RenderGUI()
             m_material->SetUniformValue("PlaneNormal", normal);
             ImGui::DragFloat("Offset", m_material->GetDataUniformPointer<float>("PlaneOffset"), 0.1f);
             ImGui::DragFloat("Speed", &speed, 0.1f);
-            m_material->SetUniformValue("Speed", speed);
+            m_material->SetUniformValue("AnimationSpeed", speed);
             ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("PlaneColor"));
             
             ImGui::TreePop();
@@ -169,9 +170,12 @@ void BlackHoleApplication::RenderGUI()
         if (ImGui::TreeNodeEx("BlackHole", ImGuiTreeNodeFlags_DefaultOpen))
         {            
             static glm::vec3 sphereStartPosition(0, -5.f, -25.f);
+            static float speed = 1.0f;
 
             ImGui::DragFloat3("StartPosition", &sphereStartPosition[0], 0.1f);
             m_material->SetUniformValue("SphereStartPosition", sphereStartPosition);
+            ImGui::DragFloat("RotationSpeed", &speed, 0.1f);
+            m_material->SetUniformValue("SphereRotationSpeed", speed);
             
             ImGui::DragFloat("Radius", m_material->GetDataUniformPointer<float>("SphereRadius"), 0.1f);
             ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("SphereColor"));

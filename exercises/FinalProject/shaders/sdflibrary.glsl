@@ -27,10 +27,11 @@ float PlaneSDF(vec3 p, vec3 normal, float offset)
 	return dot(p, normal) - offset;
 }
 
-float BendedPlaneSDF(vec3 p, vec3 normal, float offset, vec3 BendOrigin, vec2 bendDistanceBounds)
+float BendedPlaneSDF(vec3 p, vec3 normal, float offset, vec3 BendOrigin, vec2 bendDistanceBounds, float CurrentTime)
 {
 	float smoothedDist = smoothstep(bendDistanceBounds.x, bendDistanceBounds.y, distance(p, BendOrigin));
-	float dPlane = dot(p, normal) - smoothedDist *offset; 
+	float dPlane = dot(p, normalize(normal)) - smoothedDist * offset 
+	- sin(p.y + CurrentTime) * 0.5f;
 	return dPlane;
 }
 

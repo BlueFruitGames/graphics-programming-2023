@@ -28,10 +28,10 @@ float PlaneSDF(vec3 p, vec3 normal, float offset)
 }
 
 float BendedPlaneSDF(vec3 p, vec3 normal, float offset, vec3 BendOrigin, vec2 bendDistanceBounds, 
-		vec3 spherePosition, vec2 sphereInfluenceBounds, float sphereInfluence, float sphereRadius, float CurrentTime)
+		vec3 spherePosition, vec2 sphereInfluenceBounds, float sphereInfluence, float sphereRadius, float CurrentTime, out float sphereImpact)
 {
 	float smoothedDist = smoothstep(bendDistanceBounds.x, bendDistanceBounds.y, distance(p, BendOrigin));
-	float sphereImpact = 1-smoothstep(sphereInfluenceBounds.x, sphereInfluenceBounds.y, distance(p, spherePosition) - sphereRadius);
+	sphereImpact = 1-smoothstep(sphereInfluenceBounds.x, sphereInfluenceBounds.y, distance(p, spherePosition) - sphereRadius);
 	float dPlane = dot(p, normalize(normal)) - smoothedDist * offset 
 	- sin(p.y + CurrentTime) * 0.5f
 	- sphereImpact * sphereInfluence;

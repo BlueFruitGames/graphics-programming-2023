@@ -47,10 +47,10 @@ float GetDistance(vec3 p, inout Output o)
 	SphereStartPosition.y + sin(Time * SphereRotationSpeed * 2) * 8.0f,
 	BendOrigin.z - sin(Time * SphereRotationSpeed) * SphereStartPosition.z);
 	
+	float sphereImpact;
+	
 	float dGroundPlane = BendedPlaneSDF(p, PlaneNormal, PlaneOffset, BendOrigin, BendDistanceBounds, 
-	spherePosition, SphereInfluenceBounds, SphereInfluence, SphereRadius, Time * AnimationSpeed);
-	
-	
+	spherePosition, SphereInfluenceBounds, SphereInfluence, SphereRadius, Time * AnimationSpeed, sphereImpact);
 
 	float dSphere = SphereSDF(TransformToLocalPoint(p, spherePosition), SphereRadius);
 	
@@ -58,7 +58,13 @@ float GetDistance(vec3 p, inout Output o)
 	//o.color = mix(SphereColor, BoxColor, blend);
 	//d = dGroundPlane;
 	float d = Union(dSphere, dGroundPlane);
-	o.color = d == dSphere ? SphereColor : PlaneColor;
+
+	vec3 baseColor = mix(PlaneColor, vec3(1,0,0), sphereImpact);
+
+	o.color  = d == dSphere ? SphereColor : baseColor;
+
+
+
 	return d;
 }
 

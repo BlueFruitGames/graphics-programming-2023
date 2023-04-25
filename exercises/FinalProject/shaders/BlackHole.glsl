@@ -17,8 +17,14 @@ uniform float SphereRadius = 1.25f;
 uniform vec2 SphereInfluenceBounds = vec2(-1,1);
 uniform float SphereInfluence =5.0f;
 
+uniform float BlackHoleParticlesPullSpeed = 1.0f;
+uniform int BlackHoleParticlesAmount = 1;
+uniform float BlackHoleParticlesSpawnDistance = 10.0f;
+uniform float BlackHoleParticlesRadius = 1.0f;
+
 uniform float Time = 0.0f;
 
+#define PI 3.1415926538
 
 // Output structure
 struct Output
@@ -27,6 +33,25 @@ struct Output
 	vec3 color;
 };
 
+float createBlackholeParticles(vec3 p, vec3 spherePosition){
+	float d = 0;
+	float deltaAngle = 2 * PI / BlackHoleParticlesAmount;
+	for(int i = 0; i < BlackHoleParticlesAmount; ++i)
+	{
+		vec3 currentParticle = normalize(vec3(
+			sin(deltaAngle * float(i) + Time * BlackHoleParticlesPullSpeed), 
+			0, 
+			cos(deltaAngle* float(i) + Time * BlackHoleParticlesPullSpeed)
+		));
+		float dSphere = SphereSDF(TransformToLocalPoint(p, spherePosition) + currentParticle * 10.0f, 
+		BlackHoleParticlesRadius);
+		if(i == 0)
+			d = dSphere;
+		else
+			d = Union(d, dSphere);
+	}
+	return d;
+}
 
 // Signed distance function
 float GetDistance(vec3 p, inout Output o)
@@ -55,11 +80,13 @@ float GetDistance(vec3 p, inout Output o)
 	spherePosition, SphereInfluenceBounds, SphereInfluence, SphereRadius, Time * AnimationSpeed, sphereImpact);
 
 	float dSphere = SphereSDF(TransformToLocalPoint(p, spherePosition), SphereRadius);
+	float dBlackholeParticles = createBlackholeParticles(p, spherePosition); 
 	
 	
 	//o.color = mix(SphereColor, BoxColor, blend);
 	//d = dGroundPlane;
-	float d = Union(dSphere, dGroundPlane);
+	float d = Union(Union(dSphere, dGroundPlane), dBlackholeParticles);
+	float dTest = dBlackholeParticles;
 
 	vec3 baseColor = mix(PlaneColor, vec3(1,0,0), sphereImpact);
 
@@ -67,8 +94,10 @@ float GetDistance(vec3 p, inout Output o)
 
 
 
-	return d;
+	return dTest;
 }
+
+
 
 // Default value for o
 void InitOutput(out Output o)

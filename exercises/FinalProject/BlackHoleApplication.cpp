@@ -98,7 +98,6 @@ void BlackHoleApplication::InitializeMaterial()
     
     m_material->SetUniformValue("SphereRadius", 4.0f);
     m_material->SetUniformValue("SphereColor", glm::vec3(1, 0, 0));
-    //m_material->SetUniformValue("SphereRotationSpeed", 1.0f);
     m_material->SetUniformValue("SphereInfluenceBounds", glm::vec2(-3, 3));
     m_material->SetUniformValue("SphereInfluence", 5.0f);
    
@@ -188,6 +187,23 @@ void BlackHoleApplication::RenderGUI()
             m_material->SetUniformValue("SphereInfluence", influence);
             ImGui::DragFloat("Radius", m_material->GetDataUniformPointer<float>("SphereRadius"), 0.1f);
             ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("SphereColor"));
+            ImGui::TreePop();
+        }
+        if (ImGui::TreeNodeEx("BlackHoleParticles", ImGuiTreeNodeFlags_DefaultOpen))
+        {            
+            static float pullSpeed = 1.0f;
+            static int amount = 1;
+            static float spawnDistance = 10.f;
+            static float radius = 1.f;
+            
+            ImGui::DragFloat("Speed", &pullSpeed, 0.1f);
+            m_material->SetUniformValue("BlackHoleParticlesPullSpeed", pullSpeed);
+            ImGui::DragInt("Amount", &amount, 1, 1,10);
+            m_material->SetUniformValue("BlackHoleParticlesAmount", amount);
+            ImGui::DragFloat("Spawn Distance", &spawnDistance, 0.1f);
+            m_material->SetUniformValue("BlackHoleParticlesSpawnDistance", spawnDistance);
+            ImGui::DragFloat("Radius", &radius, 0.1f);
+            m_material->SetUniformValue("BlackHoleParticlesRadius", radius);
             ImGui::TreePop();
         }
         //ImGui::DragFloat("Smoothness", m_material->GetDataUniformPointer<float>("Smoothness"), 0.1f);

@@ -18,11 +18,13 @@ uniform vec2 SphereInfluenceBounds = vec2(-1,1);
 uniform float SphereInfluence =5.0f;
 
 uniform float BlackHoleParticlesPullSpeed = 1.0f;
+uniform float BlackHoleParticlesRotationSpeed = 1.0f;
 uniform int BlackHoleParticlesAmount = 1;
 uniform float BlackHoleParticlesSpawnDistance = 10.0f;
 uniform float BlackHoleParticlesRadius = 1.0f;
 
 uniform float Time = 0.0f;
+uniform float Smoothness = 1.0f;
 
 #define PI 3.1415926538
 
@@ -33,18 +35,33 @@ struct Output
 	vec3 color;
 };
 
+float pcurve( float x, float a, float b ){
+	float k = pow(a+b,a+b) / (pow(a,a)*pow(b,b));
+	return k * pow( x, a ) * pow( 1.0-x, b );
+}
+
 float createBlackholeParticles(vec3 p, vec3 spherePosition){
 	float d = 0;
 	float deltaAngle = 2 * PI / BlackHoleParticlesAmount;
 	for(int i = 0; i < BlackHoleParticlesAmount; ++i)
 	{
+		//sine -> sawtooth
+		float currentPullTime = (1 - sin(Time * BlackHoleParticlesPullSpeed - floor(Time * BlackHoleParticlesPullSpeed)));
+
 		vec3 currentParticle = normalize(vec3(
-			sin(deltaAngle * float(i) + Time * BlackHoleParticlesPullSpeed), 
+			sin(deltaAngle * float(i) + Time * BlackHoleParticlesRotationSpeed), 
 			0, 
-			cos(deltaAngle* float(i) + Time * BlackHoleParticlesPullSpeed)
+			cos(deltaAngle* float(i) + Time * BlackHoleParticlesRotationSpeed)
 		));
-		float dSphere = SphereSDF(TransformToLocalPoint(p, spherePosition) + currentParticle * 10.0f, 
-		BlackHoleParticlesRadius);
+		currentParticle *= currentPullTime;
+		
+		
+		float distanceToSphere = currentPullTime * BlackHoleParticlesSpawnDistance;
+		float normalizedDistance = smoothstep(0, BlackHoleParticlesSpawnDistance-SphereRadius, distanceToSphere);
+		//parabola shaping function 
+		float currentRadius = pcurve(normalizedDistance, .6, 3) * BlackHoleParticlesRadius;
+		vec3 particlePos = TransformToLocalPoint(p, spherePosition) + currentParticle * BlackHoleParticlesSpawnDistance;
+		float dSphere = SphereSDF(particlePos, currentRadius);
 		if(i == 0)
 			d = dSphere;
 		else
@@ -80,21 +97,17 @@ float GetDistance(vec3 p, inout Output o)
 	spherePosition, SphereInfluenceBounds, SphereInfluence, SphereRadius, Time * AnimationSpeed, sphereImpact);
 
 	float dSphere = SphereSDF(TransformToLocalPoint(p, spherePosition), SphereRadius);
-	float dBlackholeParticles = createBlackholeParticles(p, spherePosition); 
+	float dBlackholeParticles = createBlackholeParticles(p, spherePosition);
+	float blend;
+	float d = SmoothUnion(dSphere, dBlackholeParticles, Smoothness, blend);
+	vec3 blackHoleColor = mix(SphereColor, vec3(0,1,0), blend);
 	
-	
-	//o.color = mix(SphereColor, BoxColor, blend);
-	//d = dGroundPlane;
-	float d = Union(Union(dSphere, dGroundPlane), dBlackholeParticles);
-	float dTest = dBlackholeParticles;
-
+	d = Union(d, dGroundPlane);
 	vec3 baseColor = mix(PlaneColor, vec3(1,0,0), sphereImpact);
 
-	o.color  = d == dSphere ? SphereColor : baseColor;
-
-
-
-	return dTest;
+	o.color  = (d == dGroundPlane) ? baseColor : blackHoleColor;
+	
+	return d;
 }
 
 

@@ -96,12 +96,12 @@ void BlackHoleApplication::InitializeMaterial()
     m_material->SetUniformValue("PlaneBendStrength", 0.01f);
     m_material->SetUniformValue("AnimationSpeed", 3.0f);
     
-    m_material->SetUniformValue("SphereRadius", 4.0f);
+    m_material->SetUniformValue("SphereRadius", 7.0f);
     m_material->SetUniformValue("SphereColor", glm::vec3(1, 0, 0));
     m_material->SetUniformValue("SphereInfluenceBounds", glm::vec2(-3, 3));
     m_material->SetUniformValue("SphereInfluence", 5.0f);
    
-    //m_material->SetUniformValue("Smoothness", 0.25f);
+    m_material->SetUniformValue("Smoothness", 1.75f);
 }
 
 void BlackHoleApplication::InitializeRenderer()
@@ -191,13 +191,16 @@ void BlackHoleApplication::RenderGUI()
         }
         if (ImGui::TreeNodeEx("BlackHoleParticles", ImGuiTreeNodeFlags_DefaultOpen))
         {            
-            static float pullSpeed = 1.0f;
-            static int amount = 1;
-            static float spawnDistance = 10.f;
-            static float radius = 1.f;
+            static float pullSpeed = .75f;
+            static float rotationSpeed = 4.f;
+            static int amount = 5;
+            static float spawnDistance = 30.f;
+            static float radius = .6f;
             
-            ImGui::DragFloat("Speed", &pullSpeed, 0.1f);
+            ImGui::DragFloat("Pull Speed", &pullSpeed, 0.1f);
             m_material->SetUniformValue("BlackHoleParticlesPullSpeed", pullSpeed);
+            ImGui::DragFloat("Rotation Speed", &rotationSpeed, 0.1f);
+            m_material->SetUniformValue("BlackHoleParticlesRotationSpeed", rotationSpeed);
             ImGui::DragInt("Amount", &amount, 1, 1,10);
             m_material->SetUniformValue("BlackHoleParticlesAmount", amount);
             ImGui::DragFloat("Spawn Distance", &spawnDistance, 0.1f);
@@ -206,7 +209,7 @@ void BlackHoleApplication::RenderGUI()
             m_material->SetUniformValue("BlackHoleParticlesRadius", radius);
             ImGui::TreePop();
         }
-        //ImGui::DragFloat("Smoothness", m_material->GetDataUniformPointer<float>("Smoothness"), 0.1f);
+        ImGui::DragFloat("Smoothness", m_material->GetDataUniformPointer<float>("Smoothness"), 0.1f);
     }
 
     m_imGui.EndFrame();

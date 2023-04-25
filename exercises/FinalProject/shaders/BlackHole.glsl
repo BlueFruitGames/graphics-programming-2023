@@ -12,7 +12,7 @@ uniform float AnimationSpeed = 3.0f;
 uniform vec3 SphereColor = vec3(0, 0, 1);
 uniform vec3 SphereStartPosition = vec3(-2, 0, -10);
 uniform float SphereRadius = 1.25f;
-uniform float SphereRotationSpeed = 1f;
+//uniform float SphereRotationSpeed = 1f;
 
 uniform vec2 SphereInfluenceBounds = vec2(-1,1);
 uniform float SphereInfluence =5.0f;
@@ -43,9 +43,11 @@ float GetDistance(vec3 p, inout Output o)
 
 	// Replace this with a mix, using the blend factor from SmoothUnion
 
-	vec3 spherePosition = vec3(BendOrigin.x + cos(Time * SphereRotationSpeed) * SphereStartPosition.z,
-	SphereStartPosition.y + sin(Time * SphereRotationSpeed * 2) * 8.0f,
-	BendOrigin.z - sin(Time * SphereRotationSpeed) * SphereStartPosition.z);
+	//vec3 spherePosition = vec3(BendOrigin.x + cos(Time * SphereRotationSpeed) * SphereStartPosition.z,
+	//SphereStartPosition.y + sin(Time * SphereRotationSpeed * 2) * 8.0f,
+	//BendOrigin.z - sin(Time * SphereRotationSpeed) * SphereStartPosition.z);
+
+	vec3 spherePosition = SphereStartPosition + BendOrigin;
 	
 	float sphereImpact;
 	

@@ -92,6 +92,9 @@ void BlackHoleApplication::InitializeMaterial()
 
     //Textures
     m_material->SetUniformValue("GroundTexture", m_groundTexture);
+    m_material->SetUniformValue("BlackHoleTexture", m_blackHoleTexture);
+    m_material->SetUniformValue("BlackHoleParticlesTexture", m_blackHoleParticlesTexture);
+    m_material->SetUniformValue("BackgroundTexture", m_backgroundTexture);
     
     // Initialize material uniforms
     m_material->SetUniformValue("GroundNormal", glm::vec3(0, 1, 0));
@@ -108,7 +111,7 @@ void BlackHoleApplication::InitializeMaterial()
     m_material->SetUniformValue("BlackHoleInfluence", 5.0f);
    
     m_material->SetUniformValue("BlackHoleParticlesSmoothness", 0.3f);
-    m_material->SetUniformValue("Smoothness", 1.95f);
+    m_material->SetUniformValue("Smoothness", .4f);
 
     
 }
@@ -116,6 +119,9 @@ void BlackHoleApplication::InitializeMaterial()
 void BlackHoleApplication::InitializeTextures()
 {
     m_groundTexture = LoadTexture("textures/ground.png");
+    m_blackHoleTexture = LoadTexture("textures/stars.png");
+    m_blackHoleParticlesTexture = LoadTexture("textures/dirt.png");
+    m_blackHoleParticlesTexture = LoadTexture("textures/background.jpg");
     
 }
 
@@ -190,7 +196,7 @@ void BlackHoleApplication::RenderGUI()
             static glm::vec2 bendDistanceBounds(0, 100);
             static glm::vec3 normal(0, 1, 0);
             static float speed = 3.0f;
-            static glm::vec2 textureScale(4.0f, 4.0f);
+            static glm::vec2 textureScale(.2f, .2f);
             
             // Add controls for sphere parameters
             ImGui::DragFloat3("Bend Origin", &bendOrigin[0], 0.1f);
@@ -212,6 +218,7 @@ void BlackHoleApplication::RenderGUI()
             static glm::vec3 blackHoleStartPosition(0, 0, 8);
             static glm::vec2 blackHoleInfluenceBounds(-3, 5);
             static float influence = -8.f;
+            static glm::vec2 textureScale(.1f, .1f);
 
             ImGui::DragFloat3("StartPosition", &blackHoleStartPosition[0], 0.1f);
             m_material->SetUniformValue("BlackHoleStartPosition", blackHoleStartPosition);
@@ -223,17 +230,20 @@ void BlackHoleApplication::RenderGUI()
             m_material->SetUniformValue("BlackHoleInfluence", influence);
             ImGui::DragFloat("Radius", m_material->GetDataUniformPointer<float>("BlackHoleRadius"), 0.1f);
             //ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("BlackHoleColor"));
+            ImGui::DragFloat2("Texture Scale", &textureScale[0], 0.1f);
+            m_material->SetUniformValue("BlackHoleTextureScale", textureScale);
             ImGui::TreePop();
         }
         if (ImGui::TreeNodeEx("BlackHoleParticles", ImGuiTreeNodeFlags_DefaultOpen))
         {            
-            static float pullSpeed = .45f;
-            static float rotationSpeed = 3.f;
+            static float pullSpeed = .25f;
+            static float rotationSpeed = 1.f;
             static int amount = 7;
-            static float spawnDistance = 30.f;
-            static float radius = 1.5f;
+            static float spawnDistance = 40.f;
+            static float radius = .3f;
             static float rotationOffset = 0.04f;
             static int layers = 8;
+            static glm::vec2 textureScale(.2f, .2f);
             
             ImGui::DragFloat("Pull Speed", &pullSpeed, 0.1f);
             m_material->SetUniformValue("BlackHoleParticlesPullSpeed", pullSpeed);
@@ -249,7 +259,10 @@ void BlackHoleApplication::RenderGUI()
             m_material->SetUniformValue("BlackHoleParticlesLayers", layers);
             ImGui::DragFloat("rotationOffset", &rotationOffset, 0.01, 0, 1);
             m_material->SetUniformValue("BlackHoleParticlesRotationOffset", rotationOffset);
-        ImGui::DragFloat("Smoothness", m_material->GetDataUniformPointer<float>("BlackHoleParticlesSmoothness"), 0.1f);
+            ImGui::DragFloat("Smoothness", m_material->GetDataUniformPointer<float>("BlackHoleParticlesSmoothness"), 0.1f);
+            
+            ImGui::DragFloat2("Texture Scale", &textureScale[0], 0.1f);
+            m_material->SetUniformValue("BlackHoleTextureParticlesScale", textureScale);
             ImGui::TreePop();
         }
         ImGui::DragFloat("Smoothness", m_material->GetDataUniformPointer<float>("Smoothness"), 0.1f);

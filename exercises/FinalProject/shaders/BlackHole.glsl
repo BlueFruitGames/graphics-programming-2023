@@ -39,6 +39,15 @@ uniform mat4 ViewMatrix;
 uniform sampler2D GroundTexture;
 uniform vec2 GroundTextureScale;
 
+uniform sampler2D BlackHoleTexture;
+uniform vec2 BlackHoleTextureScale;
+
+uniform sampler2D BlackHoleParticlesTexture;
+uniform vec2 BlackHoleParticlesTextureScale;
+
+uniform sampler2D BackgroundTexture;
+uniform vec2 BackgroundTextureScale;
+
 // Output structure
 struct Output
 {
@@ -53,6 +62,7 @@ struct BlackHoleInfo
 	float influence;
 	float radius;
 };
+
 
 float pcurve( float x, float a, float b ){
 	float k = pow(a+b,a+b) / (pow(a,a)*pow(b,b));
@@ -84,7 +94,8 @@ float createBlackholeParticles(vec3 p, vec3 spherePosition){
 			//parabola shaping function 
 			float currentRadius = pcurve(normalizedDistance, .6, 3) * BlackHoleParticlesRadius;
 			vec3 particlePos = TransformToLocalPoint(p, spherePosition) + currentParticle * BlackHoleParticlesSpawnDistance;
-			float dSphere = SphereSDF(particlePos, currentRadius);
+			float displacement = sin(.5* p.x) * sin(.5 * p.y) * sin(.75 * p.z) * .5;
+			float dSphere = SphereSDF(particlePos, currentRadius) + displacement;
 			if(i == 0 && edgeCount ==0)
 				d = dSphere;
 			else
@@ -95,16 +106,18 @@ float createBlackholeParticles(vec3 p, vec3 spherePosition){
 }
 
 float createBlackHole(vec3 p, vec3 spherePosition){
-	float dBlackhole = SphereSDF(TransformToLocalPoint(p, spherePosition), BlackHoleRadius);
+	float dBlackhole = SphereSDF(TransformToLocalPoint(p, spherePosition), BlackHoleRadius + sin(GroundSpeed * Time) * 0.25);
 	return dBlackhole;
 }
 
-float createGround(vec3 p, BlackHoleInfo blackHoleInfo, vec2 textureCoords, out vec3 color){
+float createGround(vec3 p, BlackHoleInfo blackHoleInfo, out vec3 color){
 	float blackHoleImpact;
 	float dGroundPlane = BendedPlaneSDF(p, GroundNormal, GroundOffset,
 	BendOrigin, BendDistanceBounds,	blackHoleInfo, Time * GroundSpeed, blackHoleImpact);
 
-	vec3 groundPlaneTexColor = texture(GroundTexture, textureCoords.xy * GroundTextureScale).rgb;
+	vec3 groundPlaneTexColor = texture(GroundTexture, p.xz * GroundTextureScale).rgb;
+	
+	
 	color = mix(groundPlaneTexColor, vec3(1,0,0), blackHoleImpact);
 	return dGroundPlane;
 }
@@ -118,7 +131,7 @@ float setupColor(){
 }
 
 // Signed distance function
-float GetDistance(vec3 p, vec2 textureCoords, inout Output o)
+float GetDistance(vec3 p, inout Output o)
 {
 	//Setup of BlackholeInfo struct
 	vec3 blackHolePosition = BlackHoleStartPosition + vec3(ViewMatrix * vec4(BendOrigin, 1.0f));
@@ -130,7 +143,7 @@ float GetDistance(vec3 p, vec2 textureCoords, inout Output o)
 
 	//Creation of objects
 	vec3 groundInfluencedColor;
-	float dGroundPlane = createGround(p, blackHoleInfo, textureCoords, groundInfluencedColor);
+	float dGroundPlane = createGround(p, blackHoleInfo, groundInfluencedColor);
 	float dBlackhole = createBlackHole(p, blackHolePosition);
 	float dBlackholeParticles = createBlackholeParticles(p, blackHolePosition);
 	
@@ -138,11 +151,10 @@ float GetDistance(vec3 p, vec2 textureCoords, inout Output o)
 	//Blending of colors
 	float blend;
 	float d = SmoothUnion(dBlackhole, dBlackholeParticles, Smoothness, blend);
-	vec3 blackHoleColor = mix(BlackHoleColor, vec3(0,1,0), blend);
+	vec3 blackHoleColor = mix(texture(BlackHoleTexture,p.xy * BlackHoleTextureScale).rgb, vec3(0.4), blend);
 	
 	d = Union(d, dGroundPlane);
 	o.color  = (d == dGroundPlane) ? groundInfluencedColor : blackHoleColor;
-	
 	return d;
 }
 
@@ -155,11 +167,10 @@ void InitOutput(out Output o)
 }
 
 // Output function: Just a dot with the normal and view vectors
-vec4 GetOutputColor(vec3 p, float distance, vec2 textureCoords, Output o)
+vec4 GetOutputColor(vec3 p, float distance, Output o)
 {
-	vec3 normal = CalculateNormal(p, textureCoords);
+	vec3 normal = CalculateNormal(p);
 	vec3 viewDir = normalize(-p);
 	float dotNV = dot(normalize(-p), normal);
-	vec4 test =  vec4(dotNV * o.color, 1.0f);
-	return test;
+	return vec4(dotNV * o.color, 1.0f);
 }

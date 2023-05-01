@@ -47,4 +47,7 @@ private:
 
     //textures
     std::shared_ptr<Texture2DObject> m_groundTexture;
+    std::shared_ptr<Texture2DObject> m_blackHoleTexture;
+    std::shared_ptr<Texture2DObject> m_blackHoleParticlesTexture;
+    std::shared_ptr<Texture2DObject> m_backgroundTexture;
 };

@@ -1,13 +1,13 @@
 
 // Forward declare distance function
-float GetDistance(vec3 p);
+float GetDistance(vec3 p, vec2 textureCoords);
 
 // Forward declare config function
 void GetRayMarcherConfig(out uint maxSteps, out float maxDistance, out float surfaceDistance);
 
 
 // Ray marching algorithm
-float RayMarch(vec3 origin, vec3 dir)
+float RayMarch(vec3 origin, vec3 dir, vec2 textureCoords)
 {
     float distance = 0.0f;
 
@@ -21,7 +21,7 @@ float RayMarch(vec3 origin, vec3 dir)
     {
         // Get distance to the current point
         vec3 p = origin + dir * distance;
-        float d = GetDistance(p);
+        float d = GetDistance(p, textureCoords);
         distance += d;
 
         // If distance is too big, discard the fragment
@@ -39,7 +39,7 @@ float RayMarch(vec3 origin, vec3 dir)
 uniform int RaymarchHack;
 // Calculate numerical normals using the tetrahedron technique with specific differential
 // Implementation here because GetDistance needs to be defined
-vec3 CalculateNormal(vec3 p, float h)
+vec3 CalculateNormal(vec3 p, float h, vec2 textureCoords)
 {
     vec3 normal = vec3(0.0f);
 
@@ -47,13 +47,13 @@ vec3 CalculateNormal(vec3 p, float h)
     for(int i = ZERO; i < 4; i++)
     {
         vec3 e = 0.5773*(2.0*vec3((((i+3)>>1)&1),((i>>1)&1),(i&1))-1.0);
-        normal += e * GetDistance(p + e * h);
+        normal += e * GetDistance(p + e * h, textureCoords);
     }
 
     return normalize(normal);
 }
 
-vec3 CalculateNormal(vec3 p)
+vec3 CalculateNormal(vec3 p, vec2 textureCoords)
 {
-    return CalculateNormal(p, 0.0001f);
+    return CalculateNormal(p, 0.0001f, textureCoords);
 }

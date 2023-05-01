@@ -6,6 +6,8 @@
 #include <ituGL/camera/CameraController.h>
 #include <ituGL/utils/DearImGui.h>
 
+#include "ituGL/texture/Texture2DObject.h"
+
 class Material;
 
 class BlackHoleApplication : public Application
@@ -22,10 +24,12 @@ protected:
 private:
     void InitializeCamera();
     void InitializeMaterial();
+    void InitializeTextures();
     void InitializeRenderer();
 
     std::shared_ptr<Material> CreateRaymarchingMaterial(const char* fragmentShaderPath);
-
+    std::shared_ptr<Texture2DObject> LoadTexture(const char* path);
+    
     void RenderGUI();
 
 private:
@@ -40,4 +44,7 @@ private:
 
     // Materials
     std::shared_ptr<Material> m_material;
+
+    //textures
+    std::shared_ptr<Texture2DObject> m_groundTexture;
 };

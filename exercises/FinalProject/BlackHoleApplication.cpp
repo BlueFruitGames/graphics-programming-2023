@@ -8,6 +8,7 @@
 #include <ituGL/renderer/PostFXRenderPass.h>
 #include <ituGL/scene/RendererSceneVisitor.h>
 #include <imgui.h>
+#include <stb_image.h>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
@@ -25,6 +26,7 @@ void BlackHoleApplication::Initialize()
     m_imGui.Initialize(GetMainWindow());
 
     InitializeCamera();
+    InitializeTextures();
     InitializeMaterial();
     InitializeRenderer();
 }
@@ -88,6 +90,9 @@ void BlackHoleApplication::InitializeMaterial()
 {
     m_material = CreateRaymarchingMaterial("shaders/blackhole.glsl");
 
+    //Textures
+    m_material->SetUniformValue("GroundTexture", m_groundTexture);
+    
     // Initialize material uniforms
     m_material->SetUniformValue("GroundNormal", glm::vec3(0, 1, 0));
     m_material->SetUniformValue("GroundOffset", -35.f);
@@ -104,6 +109,14 @@ void BlackHoleApplication::InitializeMaterial()
    
     m_material->SetUniformValue("BlackHoleParticlesSmoothness", 0.3f);
     m_material->SetUniformValue("Smoothness", 1.95f);
+
+    
+}
+
+void BlackHoleApplication::InitializeTextures()
+{
+    m_groundTexture = LoadTexture("textures/ground.png");
+    
 }
 
 void BlackHoleApplication::InitializeRenderer()
@@ -137,6 +150,29 @@ std::shared_ptr<Material> BlackHoleApplication::CreateRaymarchingMaterial(const 
     return material;
 }
 
+std::shared_ptr<Texture2DObject> BlackHoleApplication::LoadTexture(const char* path)
+{
+    std::shared_ptr<Texture2DObject> texture = std::make_shared<Texture2DObject>();
+
+    int width = 0;
+    int height = 0;
+    int components = 0;
+    
+    // Load the texture data here
+    unsigned char* data = stbi_load(path, &width, &height, &components, 4);
+
+    texture->Bind();
+    texture->SetImage(0, width, height, TextureObject::FormatRGBA, TextureObject::InternalFormatRGBA, std::span<const unsigned char>(data, width * height * 4));
+
+    // Generate mipmaps
+    texture->GenerateMipmap();
+
+    // Release texture data
+    stbi_image_free(data);
+
+    return texture;
+}
+
 void BlackHoleApplication::RenderGUI()
 {
     m_imGui.BeginFrame();
@@ -154,6 +190,7 @@ void BlackHoleApplication::RenderGUI()
             static glm::vec2 bendDistanceBounds(0, 100);
             static glm::vec3 normal(0, 1, 0);
             static float speed = 3.0f;
+            static glm::vec2 textureScale(4.0f, 4.0f);
             
             // Add controls for sphere parameters
             ImGui::DragFloat3("Bend Origin", &bendOrigin[0], 0.1f);
@@ -165,8 +202,9 @@ void BlackHoleApplication::RenderGUI()
             ImGui::DragFloat("Offset", m_material->GetDataUniformPointer<float>("GroundOffset"), 0.1f);
             ImGui::DragFloat("Speed", &speed, 0.1f);
             m_material->SetUniformValue("AnimationSpeed", speed);
-            ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("GroundColor"));
-            
+            //ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("GroundColor"));
+            ImGui::DragFloat2("Texture Scale", &textureScale[0], 0.1f);
+            m_material->SetUniformValue("GroundTextureScale", textureScale);
             ImGui::TreePop();
         }
         if (ImGui::TreeNodeEx("BlackHole", ImGuiTreeNodeFlags_DefaultOpen))
@@ -184,7 +222,7 @@ void BlackHoleApplication::RenderGUI()
             ImGui::DragFloat("Influence", &influence, 0.1f);
             m_material->SetUniformValue("BlackHoleInfluence", influence);
             ImGui::DragFloat("Radius", m_material->GetDataUniformPointer<float>("BlackHoleRadius"), 0.1f);
-            ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("BlackHoleColor"));
+            //ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("BlackHoleColor"));
             ImGui::TreePop();
         }
         if (ImGui::TreeNodeEx("BlackHoleParticles", ImGuiTreeNodeFlags_DefaultOpen))

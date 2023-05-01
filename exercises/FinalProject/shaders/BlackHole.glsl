@@ -33,8 +33,11 @@ uniform float BlackHoleParticlesRotationOffset = 0.0f;
 //General Uniforms
 uniform float Time = 0.0f;
 uniform float Smoothness = 1.0f;
-
 uniform mat4 ViewMatrix;
+
+//Textures
+uniform sampler2D GroundTexture;
+uniform vec2 GroundTextureScale;
 
 // Output structure
 struct Output
@@ -96,11 +99,13 @@ float createBlackHole(vec3 p, vec3 spherePosition){
 	return dBlackhole;
 }
 
-float createGround(vec3 p, BlackHoleInfo blackHoleInfo, out vec3 color){
+float createGround(vec3 p, BlackHoleInfo blackHoleInfo, vec2 textureCoords, out vec3 color){
 	float blackHoleImpact;
 	float dGroundPlane = BendedPlaneSDF(p, GroundNormal, GroundOffset,
 	BendOrigin, BendDistanceBounds,	blackHoleInfo, Time * GroundSpeed, blackHoleImpact);
-	color = mix(GroundColor, vec3(1,0,0), blackHoleImpact);
+
+	vec3 groundPlaneTexColor = texture(GroundTexture, textureCoords.xy * GroundTextureScale).rgb;
+	color = mix(groundPlaneTexColor, vec3(1,0,0), blackHoleImpact);
 	return dGroundPlane;
 }
 
@@ -113,7 +118,7 @@ float setupColor(){
 }
 
 // Signed distance function
-float GetDistance(vec3 p, inout Output o)
+float GetDistance(vec3 p, vec2 textureCoords, inout Output o)
 {
 	//Setup of BlackholeInfo struct
 	vec3 blackHolePosition = BlackHoleStartPosition + vec3(ViewMatrix * vec4(BendOrigin, 1.0f));
@@ -125,7 +130,7 @@ float GetDistance(vec3 p, inout Output o)
 
 	//Creation of objects
 	vec3 groundInfluencedColor;
-	float dGroundPlane = createGround(p, blackHoleInfo, groundInfluencedColor);
+	float dGroundPlane = createGround(p, blackHoleInfo, textureCoords, groundInfluencedColor);
 	float dBlackhole = createBlackHole(p, blackHolePosition);
 	float dBlackholeParticles = createBlackholeParticles(p, blackHolePosition);
 	
@@ -150,10 +155,11 @@ void InitOutput(out Output o)
 }
 
 // Output function: Just a dot with the normal and view vectors
-vec4 GetOutputColor(vec3 p, float distance, Output o)
+vec4 GetOutputColor(vec3 p, float distance, vec2 textureCoords, Output o)
 {
-	vec3 normal = CalculateNormal(p);
+	vec3 normal = CalculateNormal(p, textureCoords);
 	vec3 viewDir = normalize(-p);
 	float dotNV = dot(normalize(-p), normal);
-	return vec4(dotNV * o.color, 1.0f);
+	vec4 test =  vec4(dotNV * o.color, 1.0f);
+	return test;
 }

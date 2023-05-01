@@ -8,11 +8,12 @@ out vec4 FragColor;
 uniform mat4 ProjMatrix;
 uniform mat4 InvProjMatrix;
 
+
 // Implement GetDistance based on version with output
-float GetDistance(vec3 p)
+float GetDistance(vec3 p, vec2 textureCoords)
 {
 	Output o;
-	return GetDistance(p, o);
+	return GetDistance(p,textureCoords, o);
 }
 
 // Configure ray marcher
@@ -36,7 +37,7 @@ void main()
 	vec3 dir = origin / distance;
 
 	// Get Distance from the origin to the closest object
-	distance += RayMarch(origin, dir);
+	distance += RayMarch(origin, dir, TexCoord);
 
 	// Hit point in view space is given by the direction from the camera and the distance
 	vec3 point = dir * distance;
@@ -44,10 +45,11 @@ void main()
 	// Invoke GetDistance again to get the output value
 	Output o;
 	InitOutput(o);
-	GetDistance(point, o);
+	GetDistance(point, TexCoord, o);
 
 	// With the output value, get the final color
-	FragColor = GetOutputColor(point, distance, o);
+
+	FragColor = GetOutputColor(point, distance, TexCoord, o);
 
 	// Convert linear depth to normalized depth (same as projecting the point and taking the Z/W)
 	gl_FragDepth = -ProjMatrix[2][2] - ProjMatrix[3][2] / point.z;

@@ -40,9 +40,11 @@ void BlackHoleApplication::Update()
     const Camera& camera = *m_cameraController.GetCamera()->GetCamera();
     m_renderer.SetCurrentCamera(camera);
 
+    glm::mat4 viewMatrix = m_cameraController.GetCamera()->GetCamera()->GetViewMatrix();
     // Update the material properties
     m_material->SetUniformValue("ProjMatrix", camera.GetProjectionMatrix());
     m_material->SetUniformValue("InvProjMatrix", glm::inverse(camera.GetProjectionMatrix()));
+    m_material->SetUniformValue("ViewMatrix", viewMatrix);
     m_material->SetUniformValue("Time", GetCurrentTime());
 }
 
@@ -87,7 +89,6 @@ void BlackHoleApplication::InitializeMaterial()
     m_material = CreateRaymarchingMaterial("shaders/blackhole.glsl");
 
     // Initialize material uniforms
-    
     m_material->SetUniformValue("GroundNormal", glm::vec3(0, 1, 0));
     m_material->SetUniformValue("GroundOffset", -35.f);
     m_material->SetUniformValue("GroundColor", glm::vec3(1, 1, 1));
@@ -146,7 +147,6 @@ void BlackHoleApplication::RenderGUI()
     if (auto window = m_imGui.UseWindow("Scene parameters"))
     {
         // Get the camera view matrix and transform the sphere center and the box matrix
-        glm::mat4 viewMatrix = m_cameraController.GetCamera()->GetCamera()->GetViewMatrix();
 
         if (ImGui::TreeNodeEx("Ground", ImGuiTreeNodeFlags_DefaultOpen))
         {

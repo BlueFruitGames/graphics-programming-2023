@@ -34,6 +34,8 @@ uniform float BlackHoleParticlesRotationOffset = 0.0f;
 uniform float Time = 0.0f;
 uniform float Smoothness = 1.0f;
 
+uniform mat4 ViewMatrix;
+
 // Output structure
 struct Output
 {
@@ -114,7 +116,7 @@ float setupColor(){
 float GetDistance(vec3 p, inout Output o)
 {
 	//Setup of BlackholeInfo struct
-	vec3 blackHolePosition = BlackHoleStartPosition + BendOrigin;
+	vec3 blackHolePosition = BlackHoleStartPosition + vec3(ViewMatrix * vec4(BendOrigin, 1.0f));
 	BlackHoleInfo blackHoleInfo;
 	blackHoleInfo.influence = BlackHoleInfluence;
 	blackHoleInfo.position = blackHolePosition;

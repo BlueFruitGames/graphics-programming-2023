@@ -94,14 +94,15 @@ void BlackHoleApplication::InitializeMaterial()
     m_material->SetUniformValue("BendDistanceBounds", glm::vec2(-1, 1));
     
     m_material->SetUniformValue("PlaneBendStrength", 0.01f);
-    m_material->SetUniformValue("AnimationSpeed", 3.0f);
+    m_material->SetUniformValue("GroundSpeed", 3.0f);
     
     m_material->SetUniformValue("BlackHoleRadius", 7.0f);
     m_material->SetUniformValue("BlackHoleColor", glm::vec3(1, 0, 0));
     m_material->SetUniformValue("BlackHoleInfluenceBounds", glm::vec2(-3, 3));
     m_material->SetUniformValue("BlackHoleInfluence", 5.0f);
    
-    m_material->SetUniformValue("Smoothness", 1.75f);
+    m_material->SetUniformValue("BlackHoleParticlesSmoothness", 0.3f);
+    m_material->SetUniformValue("Smoothness", 1.95f);
 }
 
 void BlackHoleApplication::InitializeRenderer()
@@ -188,11 +189,13 @@ void BlackHoleApplication::RenderGUI()
         }
         if (ImGui::TreeNodeEx("BlackHoleParticles", ImGuiTreeNodeFlags_DefaultOpen))
         {            
-            static float pullSpeed = .75f;
-            static float rotationSpeed = 4.f;
-            static int amount = 5;
+            static float pullSpeed = .45f;
+            static float rotationSpeed = 3.f;
+            static int amount = 7;
             static float spawnDistance = 30.f;
-            static float radius = .6f;
+            static float radius = 1.5f;
+            static float rotationOffset = 0.04f;
+            static int layers = 8;
             
             ImGui::DragFloat("Pull Speed", &pullSpeed, 0.1f);
             m_material->SetUniformValue("BlackHoleParticlesPullSpeed", pullSpeed);
@@ -204,6 +207,11 @@ void BlackHoleApplication::RenderGUI()
             m_material->SetUniformValue("BlackHoleParticlesSpawnDistance", spawnDistance);
             ImGui::DragFloat("Radius", &radius, 0.1f);
             m_material->SetUniformValue("BlackHoleParticlesRadius", radius);
+            ImGui::DragInt("Layers", &layers, 1, 1, 20);
+            m_material->SetUniformValue("BlackHoleParticlesLayers", layers);
+            ImGui::DragFloat("rotationOffset", &rotationOffset, 0.01, 0, 1);
+            m_material->SetUniformValue("BlackHoleParticlesRotationOffset", rotationOffset);
+        ImGui::DragFloat("Smoothness", m_material->GetDataUniformPointer<float>("BlackHoleParticlesSmoothness"), 0.1f);
             ImGui::TreePop();
         }
         ImGui::DragFloat("Smoothness", m_material->GetDataUniformPointer<float>("Smoothness"), 0.1f);

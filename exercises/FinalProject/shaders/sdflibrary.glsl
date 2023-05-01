@@ -1,6 +1,16 @@
 
 // Transformations ---
 
+struct BlackHoleInfo
+{
+// color of the closest figure
+	vec3 position;
+	vec2 influenceBounds;
+	float influence;
+	float radius;
+};
+
+
 // Transform point relative to a specific position
 vec3 TransformToLocalPoint(vec3 p, vec3 position)
 {
@@ -27,14 +37,13 @@ float PlaneSDF(vec3 p, vec3 normal, float offset)
 	return dot(p, normal) - offset;
 }
 
-float BendedPlaneSDF(vec3 p, vec3 normal, float offset, vec3 BendOrigin, vec2 bendDistanceBounds, 
-		vec3 spherePosition, vec2 sphereInfluenceBounds, float sphereInfluence, float sphereRadius, float CurrentTime, out float sphereImpact)
+float BendedPlaneSDF(vec3 p, vec3 normal, float offset, vec3 BendOrigin, vec2 bendDistanceBounds,
+BlackHoleInfo blackHoleInfo, out float blackHoleImpact)
 {
 	float smoothedDist = smoothstep(bendDistanceBounds.x, bendDistanceBounds.y, distance(p, BendOrigin));
-	sphereImpact = 1-smoothstep(sphereInfluenceBounds.x, sphereInfluenceBounds.y, distance(p, spherePosition) - sphereRadius);
+	blackHoleImpact = 1-smoothstep(blackHoleInfo.influenceBounds.x, blackHoleInfo.influenceBounds.y, distance(p, blackHoleInfo.position) - blackHoleInfo.radius);
 	float dPlane = dot(p, normalize(normal)) - smoothedDist * offset 
-	- sin(p.y + CurrentTime) * 0.5f
-	- sphereImpact * sphereInfluence;
+	- blackHoleImpact *blackHoleInfo.influence;
 	return dPlane;
 }
 

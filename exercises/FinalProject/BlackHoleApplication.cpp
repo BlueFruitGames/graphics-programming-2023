@@ -88,18 +88,18 @@ void BlackHoleApplication::InitializeMaterial()
 
     // Initialize material uniforms
     
-    m_material->SetUniformValue("PlaneNormal", glm::vec3(0, 1, 0));
-    m_material->SetUniformValue("PlaneOffset", -35.f);
-    m_material->SetUniformValue("PlaneColor", glm::vec3(1, 1, 1));
+    m_material->SetUniformValue("GroundNormal", glm::vec3(0, 1, 0));
+    m_material->SetUniformValue("GroundOffset", -35.f);
+    m_material->SetUniformValue("GroundColor", glm::vec3(1, 1, 1));
     m_material->SetUniformValue("BendDistanceBounds", glm::vec2(-1, 1));
     
     m_material->SetUniformValue("PlaneBendStrength", 0.01f);
     m_material->SetUniformValue("AnimationSpeed", 3.0f);
     
-    m_material->SetUniformValue("SphereRadius", 7.0f);
-    m_material->SetUniformValue("SphereColor", glm::vec3(1, 0, 0));
-    m_material->SetUniformValue("SphereInfluenceBounds", glm::vec2(-3, 3));
-    m_material->SetUniformValue("SphereInfluence", 5.0f);
+    m_material->SetUniformValue("BlackHoleRadius", 7.0f);
+    m_material->SetUniformValue("BlackHoleColor", glm::vec3(1, 0, 0));
+    m_material->SetUniformValue("BlackHoleInfluenceBounds", glm::vec2(-3, 3));
+    m_material->SetUniformValue("BlackHoleInfluence", 5.0f);
    
     m_material->SetUniformValue("Smoothness", 1.75f);
 }
@@ -147,7 +147,7 @@ void BlackHoleApplication::RenderGUI()
         // Get the camera view matrix and transform the sphere center and the box matrix
         glm::mat4 viewMatrix = m_cameraController.GetCamera()->GetCamera()->GetViewMatrix();
 
-        if (ImGui::TreeNodeEx("GroundPlane", ImGuiTreeNodeFlags_DefaultOpen))
+        if (ImGui::TreeNodeEx("Ground", ImGuiTreeNodeFlags_DefaultOpen))
         {
             static glm::vec3 bendOrigin(0, 0, -50);
             static glm::vec2 bendDistanceBounds(0, 100);
@@ -160,33 +160,30 @@ void BlackHoleApplication::RenderGUI()
             ImGui::DragFloat2("Bend Distance Bounds", &bendDistanceBounds[0], 0.1f);
             m_material->SetUniformValue("BendDistanceBounds", bendDistanceBounds);
             ImGui::DragFloat3("Normal", &normal[0], 0.1f);
-            m_material->SetUniformValue("PlaneNormal", normal);
-            ImGui::DragFloat("Offset", m_material->GetDataUniformPointer<float>("PlaneOffset"), 0.1f);
+            m_material->SetUniformValue("GroundNormal", normal);
+            ImGui::DragFloat("Offset", m_material->GetDataUniformPointer<float>("GroundOffset"), 0.1f);
             ImGui::DragFloat("Speed", &speed, 0.1f);
             m_material->SetUniformValue("AnimationSpeed", speed);
-            ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("PlaneColor"));
+            ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("GroundColor"));
             
             ImGui::TreePop();
         }
         if (ImGui::TreeNodeEx("BlackHole", ImGuiTreeNodeFlags_DefaultOpen))
         {            
-            static glm::vec3 sphereStartPosition(0, 0, 8);
-            static glm::vec2 sphereInfluenceBounds(-3, 5);
-            static float speed = 1.0f;
+            static glm::vec3 blackHoleStartPosition(0, 0, 8);
+            static glm::vec2 blackHoleInfluenceBounds(-3, 5);
             static float influence = -8.f;
 
-            ImGui::DragFloat3("StartPosition", &sphereStartPosition[0], 0.1f);
-            m_material->SetUniformValue("SphereStartPosition", sphereStartPosition);
-            //ImGui::DragFloat("RotationSpeed", &speed, 0.1f);
-            //m_material->SetUniformValue("SphereRotationSpeed", speed);
-            ImGui::DragFloat2("Influence Bounds", &sphereInfluenceBounds[0], 0.1f);
-            m_material->SetUniformValue("SphereInfluenceBounds", sphereInfluenceBounds);
+            ImGui::DragFloat3("StartPosition", &blackHoleStartPosition[0], 0.1f);
+            m_material->SetUniformValue("BlackHoleStartPosition", blackHoleStartPosition);
+            ImGui::DragFloat2("Influence Bounds", &blackHoleInfluenceBounds[0], 0.1f);
+            m_material->SetUniformValue("BlackHoleInfluenceBounds", blackHoleInfluenceBounds);
             
             
             ImGui::DragFloat("Influence", &influence, 0.1f);
-            m_material->SetUniformValue("SphereInfluence", influence);
-            ImGui::DragFloat("Radius", m_material->GetDataUniformPointer<float>("SphereRadius"), 0.1f);
-            ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("SphereColor"));
+            m_material->SetUniformValue("BlackHoleInfluence", influence);
+            ImGui::DragFloat("Radius", m_material->GetDataUniformPointer<float>("BlackHoleRadius"), 0.1f);
+            ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("BlackHoleColor"));
             ImGui::TreePop();
         }
         if (ImGui::TreeNodeEx("BlackHoleParticles", ImGuiTreeNodeFlags_DefaultOpen))

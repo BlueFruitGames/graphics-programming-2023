@@ -53,6 +53,12 @@ struct Output
 {
 	// color of the closest figure
 	vec3 color;
+	vec3 groundColor;
+	
+	float groundWeight;
+	
+	float blackHoleImpact;
+	float blackHoleBlending;
 };
 
 struct BlackHoleInfo
@@ -110,15 +116,9 @@ float createBlackHole(vec3 p, vec3 spherePosition){
 	return dBlackhole;
 }
 
-float createGround(vec3 p, BlackHoleInfo blackHoleInfo, out vec3 color){
-	float blackHoleImpact;
+float createGround(vec3 p, BlackHoleInfo blackHoleInfo, out float blackHoleImpact){
 	float dGroundPlane = BendedPlaneSDF(p, GroundNormal, GroundOffset,
 	BendOrigin, BendDistanceBounds,	blackHoleInfo, Time * GroundSpeed, blackHoleImpact);
-
-	vec3 groundPlaneTexColor = texture(GroundTexture, p.xz * GroundTextureScale).rgb;
-	
-	
-	color = mix(groundPlaneTexColor, vec3(1,0,0), blackHoleImpact);
 	return dGroundPlane;
 }
 
@@ -143,18 +143,17 @@ float GetDistance(vec3 p, inout Output o)
 
 	//Creation of objects
 	vec3 groundInfluencedColor;
-	float dGroundPlane = createGround(p, blackHoleInfo, groundInfluencedColor);
+	float dGroundPlane = createGround(p, blackHoleInfo, o.blackHoleImpact);
 	float dBlackhole = createBlackHole(p, blackHolePosition);
 	float dBlackholeParticles = createBlackholeParticles(p, blackHolePosition);
 	
 	
 	//Blending of colors
-	float blend;
-	float d = SmoothUnion(dBlackhole, dBlackholeParticles, Smoothness, blend);
-	vec3 blackHoleColor = mix(texture(BlackHoleTexture,p.xy * BlackHoleTextureScale).rgb, vec3(0.4), blend);
+	float d = SmoothUnion(dBlackhole, dBlackholeParticles, Smoothness, o.blackHoleBlending);
 	
 	d = Union(d, dGroundPlane);
-	o.color  = (d == dGroundPlane) ? groundInfluencedColor : blackHoleColor;
+	//pass the result of the condition or weight for material
+	o.groundWeight = (d == dGroundPlane) ? 1.0f : 0.0f;
 	return d;
 }
 
@@ -169,7 +168,13 @@ void InitOutput(out Output o)
 // Output function: Just a dot with the normal and view vectors
 vec4 GetOutputColor(vec3 p, float distance, Output o)
 {
-	vec3 normal = CalculateNormal(p);
+	vec3 groundPlaneTexColor = texture(GroundTexture, p.xz * GroundTextureScale).rgb;
+	vec3 groundColor = mix(groundPlaneTexColor, vec3(1,0,0), o.blackHoleImpact);
+
+	vec3 blackHoleColor = mix(texture(BlackHoleTexture,p.xy * BlackHoleTextureScale).rgb, vec3(0.4), o.blackHoleBlending);
+	o.color  = mix(blackHoleColor, groundColor, o.groundWeight);
+	
+	vec3 normal = CalculateNormal(p);	
 	vec3 viewDir = normalize(-p);
 	float dotNV = dot(normalize(-p), normal);
 	return vec4(dotNV * o.color, 1.0f);

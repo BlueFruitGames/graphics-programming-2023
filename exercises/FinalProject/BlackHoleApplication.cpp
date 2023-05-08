@@ -98,11 +98,9 @@ void BlackHoleApplication::InitializeMaterial()
     
     // Initialize material uniforms
     m_material->SetUniformValue("GroundNormal", glm::vec3(0, 1, 0));
-    m_material->SetUniformValue("GroundOffset", -35.f);
+    m_material->SetUniformValue("GroundOffset", -16.f);
     m_material->SetUniformValue("GroundColor", glm::vec3(1, 1, 1));
-    m_material->SetUniformValue("BendDistanceBounds", glm::vec2(-1, 1));
     
-    m_material->SetUniformValue("PlaneBendStrength", 0.01f);
     m_material->SetUniformValue("GroundSpeed", 3.0f);
     
     m_material->SetUniformValue("BlackHoleRadius", 7.0f);
@@ -112,6 +110,9 @@ void BlackHoleApplication::InitializeMaterial()
    
     m_material->SetUniformValue("BlackHoleParticlesSmoothness", 0.3f);
     m_material->SetUniformValue("Smoothness", .4f);
+    m_material->SetUniformValue("BendStrength", -.4f);
+    m_material->SetUniformValue("BendDistanceFactor", .1f);
+    m_material->SetUniformValue("BendStartOffset", -37.0f);
     m_material->SetUniformValue("FresnelPower", -13.0f);
     m_material->SetUniformValue("FresnelStrength", 50.0f);
     m_material->SetUniformValue("FresnelColor", glm::vec3(1, 0.3, 1));
@@ -195,17 +196,10 @@ void BlackHoleApplication::RenderGUI()
 
         if (ImGui::TreeNodeEx("Ground", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            static glm::vec3 bendOrigin(0, 0, -50);
-            static glm::vec2 bendDistanceBounds(0, 100);
             static glm::vec3 normal(0, 1, 0);
             static float speed = 3.0f;
             static glm::vec2 textureScale(.2f, .2f);
             
-            // Add controls for sphere parameters
-            ImGui::DragFloat3("Bend Origin", &bendOrigin[0], 0.1f);
-            m_material->SetUniformValue("BendOrigin", bendOrigin);
-            ImGui::DragFloat2("Bend Distance Bounds", &bendDistanceBounds[0], 0.1f);
-            m_material->SetUniformValue("BendDistanceBounds", bendDistanceBounds);
             ImGui::DragFloat3("Normal", &normal[0], 0.1f);
             m_material->SetUniformValue("GroundNormal", normal);
             ImGui::DragFloat("Offset", m_material->GetDataUniformPointer<float>("GroundOffset"), 0.1f);
@@ -218,7 +212,7 @@ void BlackHoleApplication::RenderGUI()
         }
         if (ImGui::TreeNodeEx("BlackHole", ImGuiTreeNodeFlags_DefaultOpen))
         {            
-            static glm::vec3 blackHoleStartPosition(0, 0, 8);
+            static glm::vec3 blackHoleStartPosition(0, -7, -65);
             static glm::vec2 blackHoleInfluenceBounds(-3, 5);
             static float influence = -8.f;
             static glm::vec2 textureScale(1, 1);
@@ -269,6 +263,9 @@ void BlackHoleApplication::RenderGUI()
             ImGui::TreePop();
         }
         ImGui::DragFloat("Smoothness", m_material->GetDataUniformPointer<float>("Smoothness"), 0.1f);
+        ImGui::DragFloat("BendStrength", m_material->GetDataUniformPointer<float>("BendStrength"), 0.1f);
+        ImGui::DragFloat("BendDistanceFactor", m_material->GetDataUniformPointer<float>("BendDistanceFactor"), 0.1f);
+        ImGui::DragFloat("BendStartOffset", m_material->GetDataUniformPointer<float>("BendStartOffset"), 0.1f);
         ImGui::DragFloat("FresnelPower", m_material->GetDataUniformPointer<float>("FresnelPower"), 0.1f);
         ImGui::DragFloat("FresnelStrength", m_material->GetDataUniformPointer<float>("FresnelStrength"), 0.1f);
         ImGui::ColorEdit3("FresnelColor", m_material->GetDataUniformPointer<float>("FresnelColor"));

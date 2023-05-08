@@ -37,12 +37,10 @@ float PlaneSDF(vec3 p, vec3 normal, float offset)
 	return dot(p, normal) - offset;
 }
 
-float BendedPlaneSDF(vec3 p, vec3 normal, float offset, vec3 BendOrigin, vec2 bendDistanceBounds, 
-BlackHoleInfo blackHoleInfo, float currentTime, out float blackHoleImpact)
+float BendedPlaneSDF(vec3 p, vec3 normal, BlackHoleInfo blackHoleInfo, float currentTime, out float blackHoleImpact)
 {
-	float smoothedDist = smoothstep(bendDistanceBounds.x, bendDistanceBounds.y, distance(p, BendOrigin));
 	blackHoleImpact = 1-smoothstep(blackHoleInfo.influenceBounds.x, blackHoleInfo.influenceBounds.y, distance(p, blackHoleInfo.position) - blackHoleInfo.radius);
-	float dPlane = dot(p, normalize(normal)) - smoothedDist * offset
+	float dPlane = dot(p, normalize(normal))// - smoothedDist * offset
 	- sin(p.y + currentTime) * 0.5f
 	- blackHoleImpact *blackHoleInfo.influence;
 	return dPlane;

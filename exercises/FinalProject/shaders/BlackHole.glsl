@@ -4,8 +4,9 @@
 #define PI 3.1415926538
 
 //Bend Uniforms
-uniform vec2 BendDistanceBounds = vec2(-1,1);
-uniform vec3 BendOrigin = vec3(0, 0, 0);
+uniform float BendStrength = 0.0f;
+uniform float BendDistanceFactor = 0.0f;
+uniform float BendStartOffset = 0.0f;
 
 //Ground Uniforms
 uniform float GroundOffset = -5.0f;
@@ -115,14 +116,14 @@ float createBlackholeParticles(vec3 p, vec3 spherePosition){
 }
 
 float createBlackHole(vec3 p, vec3 spherePosition){
+
 	float dBlackhole = SphereSDF(TransformToLocalPoint(p, spherePosition), BlackHoleRadius);
 	return dBlackhole;
 }
 
 float createGround(vec3 p, BlackHoleInfo blackHoleInfo, out float blackHoleImpact){
-	float dGroundPlane = BendedPlaneSDF(p, GroundNormal, GroundOffset,
-	BendOrigin, BendDistanceBounds,	blackHoleInfo, Time * GroundSpeed, blackHoleImpact);
-	return dGroundPlane;
+	float dGroundPlane = BendedPlaneSDF(p, GroundNormal, blackHoleInfo, Time * GroundSpeed, blackHoleImpact);
+	return dGroundPlane - GroundOffset;
 }
 
 float createHouse(){
@@ -137,7 +138,10 @@ float setupColor(){
 float GetDistance(vec3 p, inout Output o)
 {
 	//Setup of BlackholeInfo struct
-	vec3 blackHolePosition = BlackHoleStartPosition + vec3(ViewMatrix * vec4(BendOrigin, 1.0f));
+	float currentZ = clamp(0, p.z, p.z - BendStartOffset); 
+	float BendOffsetY = pow(currentZ * BendDistanceFactor, 2) * -BendStrength;
+	vec3 blackHolePosition = BlackHoleStartPosition;
+	blackHolePosition.y -= BendOffsetY;
 	BlackHoleInfo blackHoleInfo;
 	blackHoleInfo.influence = BlackHoleInfluence;
 	blackHoleInfo.position = blackHolePosition;
@@ -146,7 +150,7 @@ float GetDistance(vec3 p, inout Output o)
 
 	//Creation of objects
 	vec3 groundInfluencedColor;
-	float dGroundPlane = createGround(p, blackHoleInfo, o.blackHoleImpact);
+	float dGroundPlane = createGround(p, blackHoleInfo, o.blackHoleImpact) + BendOffsetY;
 	float dBlackhole = createBlackHole(p, blackHolePosition);
 	float dBlackholeParticles = createBlackholeParticles(p, blackHolePosition);
 	

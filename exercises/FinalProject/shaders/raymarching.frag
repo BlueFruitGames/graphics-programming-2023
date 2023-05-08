@@ -49,7 +49,7 @@ void main()
 
 	// With the output value, get the final color
 
-	FragColor = GetOutputColor(point, distance, o);
+	FragColor = GetOutputColor(point, distance, dir, o);
 
 	// Convert linear depth to normalized depth (same as projecting the point and taking the Z/W)
 	gl_FragDepth = -ProjMatrix[2][2] - ProjMatrix[3][2] / point.z;

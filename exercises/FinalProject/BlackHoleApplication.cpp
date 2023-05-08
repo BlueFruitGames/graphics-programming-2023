@@ -112,6 +112,9 @@ void BlackHoleApplication::InitializeMaterial()
    
     m_material->SetUniformValue("BlackHoleParticlesSmoothness", 0.3f);
     m_material->SetUniformValue("Smoothness", .4f);
+    m_material->SetUniformValue("FresnelPower", -13.0f);
+    m_material->SetUniformValue("FresnelStrength", 50.0f);
+    m_material->SetUniformValue("FresnelColor", glm::vec3(1, 0.3, 1));
 
     
 }
@@ -218,7 +221,7 @@ void BlackHoleApplication::RenderGUI()
             static glm::vec3 blackHoleStartPosition(0, 0, 8);
             static glm::vec2 blackHoleInfluenceBounds(-3, 5);
             static float influence = -8.f;
-            static glm::vec2 textureScale(.1f, .1f);
+            static glm::vec2 textureScale(1, 1);
 
             ImGui::DragFloat3("StartPosition", &blackHoleStartPosition[0], 0.1f);
             m_material->SetUniformValue("BlackHoleStartPosition", blackHoleStartPosition);
@@ -266,6 +269,9 @@ void BlackHoleApplication::RenderGUI()
             ImGui::TreePop();
         }
         ImGui::DragFloat("Smoothness", m_material->GetDataUniformPointer<float>("Smoothness"), 0.1f);
+        ImGui::DragFloat("FresnelPower", m_material->GetDataUniformPointer<float>("FresnelPower"), 0.1f);
+        ImGui::DragFloat("FresnelStrength", m_material->GetDataUniformPointer<float>("FresnelStrength"), 0.1f);
+        ImGui::ColorEdit3("FresnelColor", m_material->GetDataUniformPointer<float>("FresnelColor"));
     }
 
     m_imGui.EndFrame();

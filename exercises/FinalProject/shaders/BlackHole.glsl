@@ -19,6 +19,9 @@ uniform vec3 BlackHoleStartPosition = vec3(-2, 0, -10);
 uniform float BlackHoleRadius = 1.25f;
 uniform vec2 BlackHoleInfluenceBounds = vec2(-1,1);
 uniform float BlackHoleInfluence =5.0f;
+uniform float FresnelPower = 1.0f;
+uniform float FresnelStrength = 1.0f;
+uniform vec3 FresnelColor = vec3(0, 0, 1);
 
 //BlackHoleParticles Uniforms
 uniform float BlackHoleParticlesPullSpeed = 1.0f;
@@ -112,7 +115,7 @@ float createBlackholeParticles(vec3 p, vec3 spherePosition){
 }
 
 float createBlackHole(vec3 p, vec3 spherePosition){
-	float dBlackhole = SphereSDF(TransformToLocalPoint(p, spherePosition), BlackHoleRadius + sin(GroundSpeed * Time) * 0.25);
+	float dBlackhole = SphereSDF(TransformToLocalPoint(p, spherePosition), BlackHoleRadius);
 	return dBlackhole;
 }
 
@@ -166,15 +169,36 @@ void InitOutput(out Output o)
 }
 
 // Output function: Just a dot with the normal and view vectors
-vec4 GetOutputColor(vec3 p, float distance, Output o)
+vec4 GetOutputColor(vec3 p, float distance, vec3 dir, Output o)
 {
+	vec3 normal = CalculateNormal(p);
 	vec3 groundPlaneTexColor = texture(GroundTexture, p.xz * GroundTextureScale).rgb;
 	vec3 groundColor = mix(groundPlaneTexColor, vec3(1,0,0), o.blackHoleImpact);
 
-	vec3 blackHoleColor = mix(texture(BlackHoleTexture,p.xy * BlackHoleTextureScale).rgb, vec3(0.4), o.blackHoleBlending);
+	
+	vec3 triPlanerNormal = abs(normal);
+	triPlanerNormal *= pow(triPlanerNormal, vec3(5));
+	triPlanerNormal /= triPlanerNormal.x + triPlanerNormal.y + triPlanerNormal.z;
+	triPlanerNormal = (p) / (p.x + p.y + p.z);
+
+	mat3x3 triKrn = mat3x3(texture(BlackHoleTexture, abs(p.yz)).rgb,
+	texture(BlackHoleTexture, abs(p.xz)).rgb,
+	texture(BlackHoleTexture, abs(p.xy)).rgb);
+	
+	vec3 blackHoleColorXY = texture(BlackHoleTexture,normal.xy * BlackHoleTextureScale).rgb;
+	vec3 blackHoleColorXZ = texture(BlackHoleTexture,normal.xz * BlackHoleTextureScale).rgb;
+	vec3 blackHoleColorYZ = texture(BlackHoleTexture,normal.yz * BlackHoleTextureScale).rgb;
+	
+	vec3 blackHoleColorFinal = blackHoleColorXY;
+	//blackHoleColorFinal = (triKrn * abs(normal));
+
+	float fresnelFactor = dot(normal, dir); 
+	fresnelFactor = max(0, 1 - fresnelFactor);
+	fresnelFactor = pow(fresnelFactor, FresnelPower);
+	
+	vec3 blackHoleColor = mix(mix(blackHoleColorFinal, FresnelColor * FresnelStrength, fresnelFactor), vec3(0.4), o.blackHoleBlending);
 	o.color  = mix(blackHoleColor, groundColor, o.groundWeight);
 	
-	vec3 normal = CalculateNormal(p);	
 	vec3 viewDir = normalize(-p);
 	float dotNV = dot(normalize(-p), normal);
 	return vec4(dotNV * o.color, 1.0f);

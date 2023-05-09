@@ -49,12 +49,16 @@ void BlackHoleApplication::Update()
     m_renderer.SetCurrentCamera(camera);
 
 
+    glm::vec3 rotation = m_cameraController.GetCamera()->GetCamera()->ExtractRotation();
+
+    std::cout << rotation.x <<std::endl;
     // Update the material properties
     m_material->SetUniformValue("ProjMatrix", camera.GetProjectionMatrix());
 
     m_material->SetUniformValue("InvProjMatrix", glm::inverse(camera.GetProjectionMatrix()));
     m_material->SetUniformValue("ViewMatrix", glm::inverse(camera.GetViewMatrix()));
     m_material->SetUniformValue("Time", GetCurrentTime());
+    m_material->SetUniformValue("CameraRotX", rotation.x);
 }
 
 void BlackHoleApplication::Render()

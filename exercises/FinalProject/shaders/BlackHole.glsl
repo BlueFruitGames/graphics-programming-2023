@@ -189,7 +189,7 @@ vec4 GetOutputColor(vec3 p, float distance, vec3 dir, Output o)
 	vec3 normal = CalculateNormal(p);
 	vec3 groundPlaneTexColor = texture(GroundTexture, p.xz * GroundTextureScale).rgb;
 	vec3 groundColor = mix(groundPlaneTexColor, vec3(1,0,0), o.blackHoleImpact * 3);
-	vec3 blackHoleColorXY = texture(BlackHoleTexture,normal.xy * BlackHoleTextureScale).rgb;
+	vec3 blackHoleColorXY = texture(BlackHoleTexture,normal.xy * BlackHoleTextureScale + vec2(- Time * 0.2, 0) ).rgb;
 	
 	vec3 blackHoleColorFinal = blackHoleColorXY;
 

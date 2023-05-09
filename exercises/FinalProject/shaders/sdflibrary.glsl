@@ -1,5 +1,6 @@
 
 // Transformations ---
+uniform float CameraRotX = 0.0f;
 
 struct BlackHoleInfo
 {
@@ -41,7 +42,7 @@ float BendedPlaneSDF(vec3 p, vec3 normal, BlackHoleInfo blackHoleInfo, float cur
 {
 	blackHoleImpact = 1-smoothstep(blackHoleInfo.influenceBounds.x, blackHoleInfo.influenceBounds.y, distance(p, blackHoleInfo.position) - blackHoleInfo.radius);
 	float dPlane = dot(p, normalize(normal))
-	- sin(p.y + currentTime) * 0.5f
+	- sin((p.y* (1 - clamp( abs(CameraRotX), 0,1) + 0.1)+ currentTime)) * 0.5f
 	- blackHoleImpact *blackHoleInfo.influence;
 	return dPlane;
 }

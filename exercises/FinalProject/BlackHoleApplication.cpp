@@ -215,7 +215,7 @@ void BlackHoleApplication::RenderGUI()
             static glm::vec2 textureScale(.2f, .2f);
             
             ImGui::DragFloat3("Normal", &normal[0], 0.1f);
-            m_material->SetUniformValue("GroundNormal", normal);
+            m_material->SetUniformValue("GroundNormal", glm::vec3(viewMatrix * glm::vec4(normal,0.0f)));
             ImGui::DragFloat("Speed", &speed, 0.1f);
             m_material->SetUniformValue("AnimationSpeed", speed);
             ImGui::DragFloat("Offset", &offset, 0.1f);

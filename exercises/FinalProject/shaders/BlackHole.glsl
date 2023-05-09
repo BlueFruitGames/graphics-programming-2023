@@ -185,6 +185,7 @@ void InitOutput(out Output o)
 // Output function: Just a dot with the normal and view vectors
 vec4 GetOutputColor(vec3 p, float distance, vec3 dir, Output o)
 {
+	o.color = vec3(0,0,0);
 	vec3 normal = CalculateNormal(p);
 	vec3 groundPlaneTexColor = texture(GroundTexture, p.xz * GroundTextureScale).rgb;
 	vec3 groundColor = mix(groundPlaneTexColor, vec3(1,0,0), o.blackHoleImpact);
@@ -196,7 +197,9 @@ vec4 GetOutputColor(vec3 p, float distance, vec3 dir, Output o)
 	fresnelFactor = max(0, 1 - fresnelFactor);
 	fresnelFactor = pow(fresnelFactor, FresnelPower);
 	
-	vec3 blackHoleColor = mix(mix(blackHoleColorFinal, FresnelColor * FresnelStrength, fresnelFactor), vec3(0.4), o.blackHoleBlending);
+	vec3 blackHoleC = mix(blackHoleColorFinal, FresnelColor * FresnelStrength, fresnelFactor);
+	vec3 blackHoleParticleC = mix(blackHoleColorFinal, FresnelColor * FresnelStrength, fresnelFactor * (BlackHoleRadius / BlackHoleParticlesRadius));
+	vec3 blackHoleColor = mix(blackHoleC, blackHoleParticleC, o.blackHoleBlending);
 	o.color  = mix(blackHoleColor, groundColor, o.groundWeight);
 	vec3 viewDir = normalize(-p);
 	float dotNV = dot(normalize(-p), normal);

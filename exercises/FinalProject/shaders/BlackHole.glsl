@@ -195,11 +195,14 @@ vec4 GetOutputColor(vec3 p, float distance, vec3 dir, Output o)
 
 	float fresnelFactor = dot(normal, dir); 
 	fresnelFactor = max(0, 1 - fresnelFactor);
-	fresnelFactor = pow(fresnelFactor, FresnelPower);
+	fresnelFactor = pow(fresnelFactor, FresnelPower) * FresnelStrength;
 	
-	vec3 blackHoleC = mix(blackHoleColorFinal, FresnelColor * FresnelStrength, fresnelFactor);
-	vec3 blackHoleParticleC = mix(blackHoleColorFinal, FresnelColor * FresnelStrength, fresnelFactor * (BlackHoleRadius / BlackHoleParticlesRadius));
-	vec3 blackHoleColor = mix(blackHoleC, blackHoleParticleC, o.blackHoleBlending);
+	//fresnelFactor = 1 - ClampedDot(normal, dir);
+	//fresnelFactor = pow(fresnelFactor, FresnelPower)  * FresnelStrength;
+	
+	vec3 blackHoleC = mix(blackHoleColorFinal, FresnelColor, fresnelFactor);
+	vec3 blackHoleParticleC = mix(blackHoleColorFinal, FresnelColor, fresnelFactor * (BlackHoleRadius / BlackHoleParticlesRadius));
+	vec3 blackHoleColor = mix(blackHoleC, blackHoleParticleC, 0.1);
 	o.color  = mix(blackHoleColor, groundColor, o.groundWeight);
 	vec3 viewDir = normalize(-p);
 	float dotNV = dot(normalize(-p), normal);

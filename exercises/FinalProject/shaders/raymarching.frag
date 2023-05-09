@@ -63,5 +63,5 @@ void main()
 	FragColor = distance < maxDistance? GetOutputColor(point, distance, dir, o) : vec4(texture(CubeMap, (cubeMapViewMatrix * viewPos).rgb).rgb,1);
 
 	// Convert linear depth to normalized depth (same as projecting the point and taking the Z/W)
-	gl_FragDepth = -ProjMatrix[2][2] - ProjMatrix[3][2] / point.z;
+	//gl_FragDepth = -ProjMatrix[2][2] - ProjMatrix[3][2] / point.z;
 }

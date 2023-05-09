@@ -188,7 +188,7 @@ vec4 GetOutputColor(vec3 p, float distance, vec3 dir, Output o)
 	o.color = vec3(0,0,0);
 	vec3 normal = CalculateNormal(p);
 	vec3 groundPlaneTexColor = texture(GroundTexture, p.xz * GroundTextureScale).rgb;
-	vec3 groundColor = mix(groundPlaneTexColor, vec3(1,0,0), o.blackHoleImpact);
+	vec3 groundColor = mix(groundPlaneTexColor, vec3(1,0,0), o.blackHoleImpact * 3);
 	vec3 blackHoleColorXY = texture(BlackHoleTexture,normal.xy * BlackHoleTextureScale).rgb;
 	
 	vec3 blackHoleColorFinal = blackHoleColorXY;
@@ -196,9 +196,6 @@ vec4 GetOutputColor(vec3 p, float distance, vec3 dir, Output o)
 	float fresnelFactor = dot(normal, dir); 
 	fresnelFactor = max(0, 1 - fresnelFactor);
 	fresnelFactor = pow(fresnelFactor, FresnelPower) * FresnelStrength;
-	
-	//fresnelFactor = 1 - ClampedDot(normal, dir);
-	//fresnelFactor = pow(fresnelFactor, FresnelPower)  * FresnelStrength;
 	
 	vec3 blackHoleC = mix(blackHoleColorFinal, FresnelColor, fresnelFactor);
 	vec3 blackHoleParticleC = mix(blackHoleColorFinal, FresnelColor, fresnelFactor * (BlackHoleRadius / BlackHoleParticlesRadius));

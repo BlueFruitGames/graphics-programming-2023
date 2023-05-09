@@ -7,6 +7,7 @@
 #include <ituGL/utils/DearImGui.h>
 
 #include "ituGL/texture/Texture2DObject.h"
+#include "ituGL/texture/TextureCubemapObject.h"
 
 class Material;
 
@@ -50,4 +51,7 @@ private:
     std::shared_ptr<Texture2DObject> m_blackHoleTexture;
     std::shared_ptr<Texture2DObject> m_blackHoleParticlesTexture;
     std::shared_ptr<Texture2DObject> m_backgroundTexture;
+
+    // Skybox texture
+    std::shared_ptr<TextureCubemapObject> m_skyboxTexture;
 };

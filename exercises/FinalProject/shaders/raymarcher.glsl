@@ -15,7 +15,7 @@ float RayMarch(vec3 origin, vec3 dir)
     uint maxSteps;
     float maxDistance, surfaceDistance;
     GetRayMarcherConfig(maxSteps, maxDistance, surfaceDistance);
-
+    
     // Iterate until maxSteps is reached or we find a point
     for(uint i = 0u; i < maxSteps; ++i)
     {
@@ -25,8 +25,8 @@ float RayMarch(vec3 origin, vec3 dir)
         distance += d;
 
         // If distance is too big, discard the fragment
-        if (distance > maxDistance)
-            discard;
+        //if (distance > maxDistance)
+         //   discard;
 
         // If this step increment was very small, we found a hit
         if (d < surfaceDistance)

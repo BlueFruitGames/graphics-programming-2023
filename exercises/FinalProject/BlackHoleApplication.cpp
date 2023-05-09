@@ -8,9 +8,15 @@
 #include <ituGL/renderer/PostFXRenderPass.h>
 #include <ituGL/scene/RendererSceneVisitor.h>
 #include <imgui.h>
+#include <iostream>
 #include <stb_image.h>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
+
+#include <iostream>
+
+#include "ituGL/asset/TextureCubemapLoader.h"
+#include "ituGL/scene/Transform.h"
 
 BlackHoleApplication::BlackHoleApplication()
     : Application(1024, 1024, "Ray-marching demo")
@@ -42,11 +48,12 @@ void BlackHoleApplication::Update()
     const Camera& camera = *m_cameraController.GetCamera()->GetCamera();
     m_renderer.SetCurrentCamera(camera);
 
-    glm::mat4 viewMatrix = m_cameraController.GetCamera()->GetCamera()->GetViewMatrix();
+
     // Update the material properties
     m_material->SetUniformValue("ProjMatrix", camera.GetProjectionMatrix());
+
     m_material->SetUniformValue("InvProjMatrix", glm::inverse(camera.GetProjectionMatrix()));
-    m_material->SetUniformValue("ViewMatrix", viewMatrix);
+    m_material->SetUniformValue("ViewMatrix", glm::inverse(camera.GetViewMatrix()));
     m_material->SetUniformValue("Time", GetCurrentTime());
 }
 
@@ -88,8 +95,16 @@ void BlackHoleApplication::InitializeCamera()
 
 void BlackHoleApplication::InitializeMaterial()
 {
+    m_skyboxTexture = TextureCubemapLoader::LoadTextureShared("models/skybox/starCubemap.png", TextureObject::FormatRGB, TextureObject::InternalFormatSRGB8);
+    TextureCubemapObject::Unbind();
+
+    m_skyboxTexture->Bind();
+    float maxLod;
+    m_skyboxTexture->GetParameter(TextureObject::ParameterFloat::MaxLod, maxLod);
+    
     m_material = CreateRaymarchingMaterial("shaders/blackhole.glsl");
 
+    m_material->SetUniformValue("CubeMap", m_skyboxTexture);
     //Textures
     m_material->SetUniformValue("GroundTexture", m_groundTexture);
     m_material->SetUniformValue("BlackHoleTexture", m_blackHoleTexture);
@@ -98,26 +113,23 @@ void BlackHoleApplication::InitializeMaterial()
     
     // Initialize material uniforms
     m_material->SetUniformValue("GroundNormal", glm::vec3(0, 1, 0));
-    m_material->SetUniformValue("GroundOffset", -16.f);
     m_material->SetUniformValue("GroundColor", glm::vec3(1, 1, 1));
     
     m_material->SetUniformValue("GroundSpeed", 3.0f);
     
-    m_material->SetUniformValue("BlackHoleRadius", 7.0f);
+    m_material->SetUniformValue("BlackHoleRadius", 3.0f);
     m_material->SetUniformValue("BlackHoleColor", glm::vec3(1, 0, 0));
     m_material->SetUniformValue("BlackHoleInfluenceBounds", glm::vec2(-3, 3));
     m_material->SetUniformValue("BlackHoleInfluence", 5.0f);
    
     m_material->SetUniformValue("BlackHoleParticlesSmoothness", 0.3f);
-    m_material->SetUniformValue("Smoothness", .4f);
-    m_material->SetUniformValue("BendStrength", -.4f);
+    m_material->SetUniformValue("Smoothness", .2f);
+    m_material->SetUniformValue("BendStrength", -1.4f);
     m_material->SetUniformValue("BendDistanceFactor", .1f);
     m_material->SetUniformValue("BendStartOffset", -37.0f);
     m_material->SetUniformValue("FresnelPower", -13.0f);
     m_material->SetUniformValue("FresnelStrength", 50.0f);
     m_material->SetUniformValue("FresnelColor", glm::vec3(1, 0.3, 1));
-
-    
 }
 
 void BlackHoleApplication::InitializeTextures()
@@ -190,6 +202,7 @@ void BlackHoleApplication::RenderGUI()
     // Draw GUI for camera controller
     //m_cameraController.DrawGUI(m_imGui);
 
+    glm::mat4 viewMatrix = m_cameraController.GetCamera()->GetCamera()->GetViewMatrix();
     if (auto window = m_imGui.UseWindow("Scene parameters"))
     {
         // Get the camera view matrix and transform the sphere center and the box matrix
@@ -198,13 +211,15 @@ void BlackHoleApplication::RenderGUI()
         {
             static glm::vec3 normal(0, 1, 0);
             static float speed = 3.0f;
+            static float offset = -11.f;
             static glm::vec2 textureScale(.2f, .2f);
             
             ImGui::DragFloat3("Normal", &normal[0], 0.1f);
             m_material->SetUniformValue("GroundNormal", normal);
-            ImGui::DragFloat("Offset", m_material->GetDataUniformPointer<float>("GroundOffset"), 0.1f);
             ImGui::DragFloat("Speed", &speed, 0.1f);
             m_material->SetUniformValue("AnimationSpeed", speed);
+            ImGui::DragFloat("Offset", &offset, 0.1f);
+            m_material->SetUniformValue("GroundOffset", offset);
             //ImGui::ColorEdit3("Color", m_material->GetDataUniformPointer<float>("GroundColor"));
             ImGui::DragFloat2("Texture Scale", &textureScale[0], 0.1f);
             m_material->SetUniformValue("GroundTextureScale", textureScale);
@@ -212,13 +227,13 @@ void BlackHoleApplication::RenderGUI()
         }
         if (ImGui::TreeNodeEx("BlackHole", ImGuiTreeNodeFlags_DefaultOpen))
         {            
-            static glm::vec3 blackHoleStartPosition(0, -7, -65);
-            static glm::vec2 blackHoleInfluenceBounds(-3, 5);
+            static glm::vec3 blackHoleStartPosition(0, -7, -45);
+            static glm::vec2 blackHoleInfluenceBounds(-8, 6);
             static float influence = -8.f;
             static glm::vec2 textureScale(1, 1);
 
             ImGui::DragFloat3("StartPosition", &blackHoleStartPosition[0], 0.1f);
-            m_material->SetUniformValue("BlackHoleStartPosition", blackHoleStartPosition);
+            m_material->SetUniformValue("BlackHoleStartPosition",  glm::vec3(viewMatrix * glm::vec4(blackHoleStartPosition, 1.0f)));
             ImGui::DragFloat2("Influence Bounds", &blackHoleInfluenceBounds[0], 0.1f);
             m_material->SetUniformValue("BlackHoleInfluenceBounds", blackHoleInfluenceBounds);
             
@@ -233,13 +248,13 @@ void BlackHoleApplication::RenderGUI()
         }
         if (ImGui::TreeNodeEx("BlackHoleParticles", ImGuiTreeNodeFlags_DefaultOpen))
         {            
-            static float pullSpeed = .25f;
-            static float rotationSpeed = 1.f;
+            static float pullSpeed = .05f;
+            static float rotationSpeed = .2f;
             static int amount = 7;
-            static float spawnDistance = 40.f;
-            static float radius = .3f;
+            static float spawnDistance = 16.f;
+            static float radius = .2f;
             static float rotationOffset = 0.04f;
-            static int layers = 8;
+            static int layers = 6;
             static glm::vec2 textureScale(.2f, .2f);
             
             ImGui::DragFloat("Pull Speed", &pullSpeed, 0.1f);

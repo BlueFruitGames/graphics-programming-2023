@@ -7,6 +7,9 @@ out vec4 FragColor;
 //Uniforms
 uniform mat4 ProjMatrix;
 uniform mat4 InvProjMatrix;
+uniform mat4 ViewMatrix;
+uniform samplerCube CubeMap;
+
 
 
 // Implement GetDistance based on version with output
@@ -46,11 +49,19 @@ void main()
 	Output o;
 	InitOutput(o);
 	GetDistance(point, o);
+	
+	uint maxSteps;
+	float maxDistance, surfaceDistance;
+	GetRayMarcherConfig(maxSteps, maxDistance, surfaceDistance);
 
+	mat4 cubeMapViewMatrix;
+	cubeMapViewMatrix = ViewMatrix;
+	cubeMapViewMatrix[3][0] = 0;
+	cubeMapViewMatrix[3][1] = 0;
+	cubeMapViewMatrix[3][2] = 0;
 	// With the output value, get the final color
-
-	FragColor = GetOutputColor(point, distance, dir, o);
+	FragColor = distance < maxDistance? GetOutputColor(point, distance, dir, o) : vec4(texture(CubeMap, (cubeMapViewMatrix * viewPos).rgb).rgb,1);
 
 	// Convert linear depth to normalized depth (same as projecting the point and taking the Z/W)
-	gl_FragDepth = -ProjMatrix[2][2] - ProjMatrix[3][2] / point.z;
+	//gl_FragDepth = -ProjMatrix[2][2] - ProjMatrix[3][2] / point.z;
 }

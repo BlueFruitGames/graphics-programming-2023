@@ -4,6 +4,7 @@ layout (location = 0) in vec3 VertexPosition;
 //Outputs
 out vec2 TexCoord;
 
+
 void main()
 {
 	// texture coordinates

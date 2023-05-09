@@ -37,7 +37,6 @@ uniform float BlackHoleParticlesRotationOffset = 0.0f;
 //General Uniforms
 uniform float Time = 0.0f;
 uniform float Smoothness = 1.0f;
-uniform mat4 ViewMatrix;
 
 //Textures
 uniform sampler2D GroundTexture;
@@ -52,6 +51,10 @@ uniform vec2 BlackHoleParticlesTextureScale;
 uniform sampler2D BackgroundTexture;
 uniform vec2 BackgroundTextureScale;
 
+
+// Forward declare config function
+void GetRayMarcherConfig(out uint maxSteps, out float maxDistance, out float surfaceDistance);
+
 // Output structure
 struct Output
 {
@@ -60,6 +63,7 @@ struct Output
 	vec3 groundColor;
 	
 	float groundWeight;
+	float backgroundWeight;
 	
 	float blackHoleImpact;
 	float blackHoleBlending;
@@ -104,8 +108,7 @@ float createBlackholeParticles(vec3 p, vec3 spherePosition){
 			//parabola shaping function 
 			float currentRadius = pcurve(normalizedDistance, .6, 3) * BlackHoleParticlesRadius;
 			vec3 particlePos = TransformToLocalPoint(p, spherePosition) + currentParticle * BlackHoleParticlesSpawnDistance;
-			float displacement = sin(.5* p.x) * sin(.5 * p.y) * sin(.75 * p.z) * .5;
-			float dSphere = SphereSDF(particlePos, currentRadius) + displacement;
+			float dSphere = SphereSDF(particlePos, currentRadius);
 			if(i == 0 && edgeCount ==0)
 				d = dSphere;
 			else
@@ -161,6 +164,13 @@ float GetDistance(vec3 p, inout Output o)
 	d = Union(d, dGroundPlane);
 	//pass the result of the condition or weight for material
 	o.groundWeight = (d == dGroundPlane) ? 1.0f : 0.0f;
+	o.backgroundWeight = (d == dBlackhole) || (d == dBlackholeParticles) || (d == dGroundPlane) ? 0.0f : 1.0f;
+
+
+	uint maxSteps;
+	float maxDistance, surfaceDistance;
+	GetRayMarcherConfig(maxSteps, maxDistance, surfaceDistance);
+	o.backgroundWeight = d > maxDistance ? 0.0f : 1.0f;
 	return d;
 }
 
@@ -178,23 +188,9 @@ vec4 GetOutputColor(vec3 p, float distance, vec3 dir, Output o)
 	vec3 normal = CalculateNormal(p);
 	vec3 groundPlaneTexColor = texture(GroundTexture, p.xz * GroundTextureScale).rgb;
 	vec3 groundColor = mix(groundPlaneTexColor, vec3(1,0,0), o.blackHoleImpact);
-
-	
-	vec3 triPlanerNormal = abs(normal);
-	triPlanerNormal *= pow(triPlanerNormal, vec3(5));
-	triPlanerNormal /= triPlanerNormal.x + triPlanerNormal.y + triPlanerNormal.z;
-	triPlanerNormal = (p) / (p.x + p.y + p.z);
-
-	mat3x3 triKrn = mat3x3(texture(BlackHoleTexture, abs(p.yz)).rgb,
-	texture(BlackHoleTexture, abs(p.xz)).rgb,
-	texture(BlackHoleTexture, abs(p.xy)).rgb);
-	
 	vec3 blackHoleColorXY = texture(BlackHoleTexture,normal.xy * BlackHoleTextureScale).rgb;
-	vec3 blackHoleColorXZ = texture(BlackHoleTexture,normal.xz * BlackHoleTextureScale).rgb;
-	vec3 blackHoleColorYZ = texture(BlackHoleTexture,normal.yz * BlackHoleTextureScale).rgb;
 	
 	vec3 blackHoleColorFinal = blackHoleColorXY;
-	//blackHoleColorFinal = (triKrn * abs(normal));
 
 	float fresnelFactor = dot(normal, dir); 
 	fresnelFactor = max(0, 1 - fresnelFactor);
@@ -202,7 +198,6 @@ vec4 GetOutputColor(vec3 p, float distance, vec3 dir, Output o)
 	
 	vec3 blackHoleColor = mix(mix(blackHoleColorFinal, FresnelColor * FresnelStrength, fresnelFactor), vec3(0.4), o.blackHoleBlending);
 	o.color  = mix(blackHoleColor, groundColor, o.groundWeight);
-	
 	vec3 viewDir = normalize(-p);
 	float dotNV = dot(normalize(-p), normal);
 	return vec4(dotNV * o.color, 1.0f);

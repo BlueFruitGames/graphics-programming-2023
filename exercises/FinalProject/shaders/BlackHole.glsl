@@ -3,53 +3,56 @@
 
 #define PI 3.1415926538
 
+
+//General Uniforms
+uniform int isWorldBendingActive = 0;
+uniform int isGroundAnimationActive = 0;
+uniform int isFresnelActive = 1;
+uniform vec3 FresnelColor = vec3(0, 0, 1);
+
+uniform float Time = 0.0f;
+uniform float Smoothness = 1.0f;
+
+//SkyBox uniforms
+uniform sampler2D BackgroundTexture;
+uniform vec2 BackgroundTextureScale;
+
 //Bend Uniforms
 uniform float BendStrength = 0.0f;
 uniform float BendDistanceFactor = 0.0f;
 uniform float BendStartOffset = 0.0f;
 
 //Ground Uniforms
-uniform float GroundOffset = -5.0f;
+uniform sampler2D GroundTexture;
+uniform vec2 GroundTextureScale;
 uniform vec3 GroundNormal = vec3(0, 1, 0);
-uniform vec3 GroundColor = vec3(1,1,1);
+uniform float GroundOffset = -5.0f;
 uniform float GroundSpeed = 3.0f;
 
+
 //BlackHole Uniforms
+uniform int isBlackHoleTextureMoving = 1;
+uniform sampler2D BlackHoleTexture;
+uniform vec2 BlackHoleTextureScale;
 uniform vec3 BlackHoleColor = vec3(0, 0, 1);
-uniform vec3 BlackHoleStartPosition = vec3(-2, 0, -10);
+uniform vec3 BlackHolePosition = vec3(-2, 0, -10);
 uniform float BlackHoleRadius = 1.25f;
 uniform vec2 BlackHoleInfluenceBounds = vec2(-1,1);
 uniform float BlackHoleInfluence =5.0f;
 uniform float FresnelPower = 1.0f;
 uniform float FresnelStrength = 1.0f;
-uniform vec3 FresnelColor = vec3(0, 0, 1);
 
 //BlackHoleParticles Uniforms
-uniform float BlackHoleParticlesPullSpeed = 1.0f;
-uniform float BlackHoleParticlesRotationSpeed = 1.0f;
-uniform int BlackHoleParticlesAmount = 1;
-uniform float BlackHoleParticlesSpawnDistance = 10.0f;
-uniform float BlackHoleParticlesRadius = 1.0f;
-uniform int BlackHoleParticlesLayers = 1;
-uniform float BlackHoleParticlesSmoothness = 1;
-uniform float BlackHoleParticlesRotationOffset = 0.0f;
-
-//General Uniforms
-uniform float Time = 0.0f;
-uniform float Smoothness = 1.0f;
-
-//Textures
-uniform sampler2D GroundTexture;
-uniform vec2 GroundTextureScale;
-
-uniform sampler2D BlackHoleTexture;
-uniform vec2 BlackHoleTextureScale;
-
 uniform sampler2D BlackHoleParticlesTexture;
 uniform vec2 BlackHoleParticlesTextureScale;
-
-uniform sampler2D BackgroundTexture;
-uniform vec2 BackgroundTextureScale;
+uniform float BlackHoleParticlesPullSpeed = 1.0f;
+uniform float BlackHoleParticlesRotationSpeed = 1.0f;
+uniform float BlackHoleParticlesSpawnDistance = 10.0f;
+uniform float BlackHoleParticlesRadius = 1.0f;
+uniform int BlackHoleParticlesColumnCount = 1;
+uniform int BlackHoleParticlesPerColumn = 1;
+uniform float BlackHoleParticlesSmoothness = 1;
+uniform float BlackHoleParticlesRotationOffset = 0.0f;
 
 
 // Forward declare config function
@@ -85,13 +88,13 @@ float pcurve( float x, float a, float b ){
 
 float createBlackholeParticles(vec3 p, vec3 spherePosition){
 	float d = 0;
-	float baseDeltaAngle = 2 * PI / BlackHoleParticlesAmount;
+	float baseDeltaAngle = 2 * PI / BlackHoleParticlesColumnCount;
 	int maxEdges = 5;
-	for (int edgeCount = 0; edgeCount < BlackHoleParticlesLayers; ++edgeCount){
+	for (int edgeCount = 0; edgeCount < BlackHoleParticlesPerColumn; ++edgeCount){
 		float deltaAngle = baseDeltaAngle + BlackHoleParticlesRotationOffset * edgeCount;
-		for(int i = 0; i < BlackHoleParticlesAmount; ++i)
+		for(int i = 0; i < BlackHoleParticlesColumnCount; ++i)
 		{
-			float Offset = float(edgeCount)/float(BlackHoleParticlesLayers);
+			float Offset = float(edgeCount)/float(BlackHoleParticlesPerColumn);
 			//sine -> sawtooth
 			float currentPullTime = (1 - sin(Offset + Time * BlackHoleParticlesPullSpeed - floor(Offset + Time * BlackHoleParticlesPullSpeed)));
 	
@@ -125,7 +128,7 @@ float createBlackHole(vec3 p, vec3 spherePosition){
 }
 
 float createGround(vec3 p, BlackHoleInfo blackHoleInfo, out float blackHoleImpact){
-	float dGroundPlane = BendedPlaneSDF(p, GroundNormal, blackHoleInfo, Time * GroundSpeed, blackHoleImpact);
+	float dGroundPlane = BendedPlaneSDF(p, GroundNormal, blackHoleInfo, Time * GroundSpeed * isGroundAnimationActive, blackHoleImpact);
 	return dGroundPlane - GroundOffset;
 }
 
@@ -142,8 +145,8 @@ float GetDistance(vec3 p, inout Output o)
 {
 	//Setup of BlackholeInfo struct
 	float currentZ = clamp(0, p.z, p.z - BendStartOffset); 
-	float BendOffsetY = pow(currentZ * BendDistanceFactor, 2) * -BendStrength;
-	vec3 blackHolePosition = BlackHoleStartPosition;
+	float BendOffsetY = pow(currentZ * BendDistanceFactor, 2) * -BendStrength * isWorldBendingActive;
+	vec3 blackHolePosition = BlackHolePosition;
 	blackHolePosition.y -= BendOffsetY;
 	BlackHoleInfo blackHoleInfo;
 	blackHoleInfo.influence = BlackHoleInfluence;
@@ -189,7 +192,7 @@ vec4 GetOutputColor(vec3 p, float distance, vec3 dir, Output o)
 	vec3 normal = CalculateNormal(p);
 	vec3 groundPlaneTexColor = texture(GroundTexture, p.xz * GroundTextureScale).rgb;
 	vec3 groundColor = mix(groundPlaneTexColor, vec3(1,0,0), o.blackHoleImpact * 3);
-	vec3 blackHoleColorXY = texture(BlackHoleTexture,normal.xy * BlackHoleTextureScale + vec2(- Time * 0.2, 0) ).rgb;
+	vec3 blackHoleColorXY = texture(BlackHoleTexture,normal.xy * BlackHoleTextureScale + vec2(- Time * 0.2 * isBlackHoleTextureMoving, 0) ).rgb;
 	
 	vec3 blackHoleColorFinal = blackHoleColorXY;
 
@@ -197,8 +200,8 @@ vec4 GetOutputColor(vec3 p, float distance, vec3 dir, Output o)
 	fresnelFactor = max(0, 1 - fresnelFactor);
 	fresnelFactor = pow(fresnelFactor, FresnelPower) * FresnelStrength;
 	
-	vec3 blackHoleC = mix(blackHoleColorFinal, FresnelColor, fresnelFactor);
-	vec3 blackHoleParticleC = mix(blackHoleColorFinal, FresnelColor, fresnelFactor * (BlackHoleRadius / BlackHoleParticlesRadius));
+	vec3 blackHoleC = mix(blackHoleColorFinal, FresnelColor, fresnelFactor * isFresnelActive);
+	vec3 blackHoleParticleC = mix(blackHoleColorFinal, FresnelColor, fresnelFactor * (BlackHoleRadius / BlackHoleParticlesRadius) * isFresnelActive);
 	vec3 blackHoleColor = mix(blackHoleC, blackHoleParticleC, 0.1);
 	o.color  = mix(blackHoleColor, groundColor, o.groundWeight);
 	vec3 viewDir = normalize(-p);

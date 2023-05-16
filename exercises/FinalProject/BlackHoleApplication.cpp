@@ -63,7 +63,8 @@ void BlackHoleApplication::Update()
     
     
     glm::mat4 viewMatrix = m_cameraController.GetCamera()->GetCamera()->GetViewMatrix();
-    m_material->SetUniformValue("GroundNormal", glm::vec3(viewMatrix * glm::vec4(glm::vec3(0, 1, 0),0.0f)));
+    m_material->SetUniformValue("GroundNormal",
+        glm::vec3(viewMatrix * glm::vec4(glm::vec3(0, 1, 0),0.0f)));
 }
 
 void BlackHoleApplication::Render()
@@ -132,7 +133,7 @@ void BlackHoleApplication::InitializeMaterial()
     //Bending
     m_material->SetUniformValue("BendStrength", -1.4f);
     m_material->SetUniformValue("BendDistanceFactor", .1f);
-    m_material->SetUniformValue("BendStartOffset", -37.0f);
+    m_material->SetUniformValue("BendStartOffset", 37.0f);
     
     //Fresnel
     m_material->SetUniformValue("FresnelPower", -13.0f);
@@ -142,7 +143,7 @@ void BlackHoleApplication::InitializeMaterial()
     //Blackhole
     
     m_material->SetUniformValue("BlackHoleTexture", m_blackHoleTexture);
-    m_material->SetUniformValue("BlackHoleTextureScale", glm::vec2(1, 1));
+    m_material->SetUniformValue("BlackHoleTextureScale", glm::vec2(2, 2));
     m_material->SetUniformValue("BlackHoleRadius", 3.0f);
     m_material->SetUniformValue("BlackHoleColor", glm::vec3(1, 0, 0));
     m_material->SetUniformValue("BlackHoleInfluenceBounds", glm::vec2(-3, 3));
@@ -245,9 +246,9 @@ void BlackHoleApplication::RenderGUI()
             static bool activateFresnel = true;
             ImGui::Checkbox("ActivateFresnel?", &activateFresnel);
             m_material->SetUniformValue("isFresnelActive", static_cast<int>(activateFresnel));
-
             
-            ImGui::ColorEdit3("FresnelColor", m_material->GetDataUniformPointer<float>("FresnelColor"));
+            if(activateFresnel)
+                ImGui::ColorEdit3("FresnelColor", m_material->GetDataUniformPointer<float>("FresnelColor"));
             
             ImGui::TreePop();
         }
@@ -285,12 +286,12 @@ void BlackHoleApplication::RenderGUI()
             ImGui::DragFloat("Rotation Speed", &rotationSpeed, 0.1f);
             m_material->SetUniformValue("BlackHoleParticlesRotationSpeed", rotationSpeed);
             
-            static int columnCount = 7;
-            ImGui::DragInt("ParticleColumnCount", &columnCount, 1, 1,10);
+            static int columnCount = 4;
+            ImGui::DragInt("Particle Column Count", &columnCount, 1, 1,10);
             m_material->SetUniformValue("BlackHoleParticlesColumnCount", columnCount);
             
-            static int amountPerColumn = 6;
-            ImGui::DragInt("ParticleAmountCountPerColumn", &amountPerColumn, 1, 1, 10);
+            static int amountPerColumn = 3;
+            ImGui::DragInt("Particle Count Per Column", &amountPerColumn, 1, 1, 10);
             m_material->SetUniformValue("BlackHoleParticlesPerColumn", amountPerColumn);
             
             ImGui::TreePop();

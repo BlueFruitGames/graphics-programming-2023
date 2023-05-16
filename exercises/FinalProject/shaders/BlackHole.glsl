@@ -90,29 +90,29 @@ float createBlackholeParticles(vec3 p, vec3 spherePosition){
 	float d = 0;
 	float baseDeltaAngle = 2 * PI / BlackHoleParticlesColumnCount;
 	int maxEdges = 5;
-	for (int edgeCount = 0; edgeCount < BlackHoleParticlesPerColumn; ++edgeCount){
-		float deltaAngle = baseDeltaAngle + BlackHoleParticlesRotationOffset * edgeCount;
-		for(int i = 0; i < BlackHoleParticlesColumnCount; ++i)
+	for (int x = 0; x < BlackHoleParticlesPerColumn; ++x){
+		float deltaAngle = baseDeltaAngle + BlackHoleParticlesRotationOffset * x;
+		for(int y = 0; y < BlackHoleParticlesColumnCount; ++y)
 		{
-			float Offset = float(edgeCount)/float(BlackHoleParticlesPerColumn);
+			float Offset = float(x)/float(BlackHoleParticlesPerColumn);
 			//sine -> sawtooth
 			float currentPullTime = (1 - sin(Offset + Time * BlackHoleParticlesPullSpeed - floor(Offset + Time * BlackHoleParticlesPullSpeed)));
 	
 			vec3 currentParticle = normalize(vec3(
-			sin(deltaAngle * float(i) + Time * BlackHoleParticlesRotationSpeed + Offset),
+			sin(deltaAngle * float(y) + Time * BlackHoleParticlesRotationSpeed + Offset),
 			0,
-			cos(deltaAngle* float(i) + Time * BlackHoleParticlesRotationSpeed + Offset)
+			cos(deltaAngle* float(y) + Time * BlackHoleParticlesRotationSpeed + Offset)
 			));
 			currentParticle *= currentPullTime;
 	
 	
 			float distanceToSphere = currentPullTime * BlackHoleParticlesSpawnDistance;
-			float normalizedDistance = smoothstep(0, BlackHoleParticlesSpawnDistance-BlackHoleRadius, distanceToSphere);
+			float normalizedDistance = smoothstep(0, BlackHoleParticlesSpawnDistance, distanceToSphere);
 			//parabola shaping function 
 			float currentRadius = pcurve(normalizedDistance, .6, 3) * BlackHoleParticlesRadius;
 			vec3 particlePos = TransformToLocalPoint(p, spherePosition) + currentParticle * BlackHoleParticlesSpawnDistance;
 			float dSphere = SphereSDF(particlePos, currentRadius);
-			if(i == 0 && edgeCount ==0)
+			if(y == 0 && x ==0)
 				d = dSphere;
 			else
 				d = SmoothUnion(d, dSphere, BlackHoleParticlesSmoothness);
@@ -144,7 +144,7 @@ float setupColor(){
 float GetDistance(vec3 p, inout Output o)
 {
 	//Setup of BlackholeInfo struct
-	float currentZ = clamp(0, p.z, p.z - BendStartOffset); 
+	float currentZ = max(0, abs(p.z) - BendStartOffset); 
 	float BendOffsetY = pow(currentZ * BendDistanceFactor, 2) * -BendStrength * isWorldBendingActive;
 	vec3 blackHolePosition = BlackHolePosition;
 	blackHolePosition.y -= BendOffsetY;
@@ -154,8 +154,8 @@ float GetDistance(vec3 p, inout Output o)
 	blackHoleInfo.influenceBounds = BlackHoleInfluenceBounds;
 	blackHoleInfo.radius = BlackHoleRadius;
 
+	
 	//Creation of objects
-	vec3 groundInfluencedColor;
 	float dGroundPlane = createGround(p, blackHoleInfo, o.blackHoleImpact) + BendOffsetY;
 	float dBlackhole = createBlackHole(p, blackHolePosition);
 	float dBlackholeParticles = createBlackholeParticles(p, blackHolePosition);
@@ -167,7 +167,6 @@ float GetDistance(vec3 p, inout Output o)
 	d = Union(d, dGroundPlane);
 	//pass the result of the condition or weight for material
 	o.groundWeight = (d == dGroundPlane) ? 1.0f : 0.0f;
-	o.backgroundWeight = (d == dBlackhole) || (d == dBlackholeParticles) || (d == dGroundPlane) ? 0.0f : 1.0f;
 
 
 	uint maxSteps;
@@ -192,7 +191,8 @@ vec4 GetOutputColor(vec3 p, float distance, vec3 dir, Output o)
 	vec3 normal = CalculateNormal(p);
 	vec3 groundPlaneTexColor = texture(GroundTexture, p.xz * GroundTextureScale).rgb;
 	vec3 groundColor = mix(groundPlaneTexColor, vec3(1,0,0), o.blackHoleImpact * 3);
-	vec3 blackHoleColorXY = texture(BlackHoleTexture,normal.xy * BlackHoleTextureScale + vec2(- Time * 0.2 * isBlackHoleTextureMoving, 0) ).rgb;
+	vec3 blackHoleColorXY = 
+	   texture(BlackHoleTexture,normal.xy * BlackHoleTextureScale + vec2(- Time * 0.2 * isBlackHoleTextureMoving, 0) ).rgb;
 	
 	vec3 blackHoleColorFinal = blackHoleColorXY;
 
